@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { useRouter } from 'next/navigation';
 import { Download, Users, FileSpreadsheet, Calendar, Filter, LogOut } from 'lucide-react';
