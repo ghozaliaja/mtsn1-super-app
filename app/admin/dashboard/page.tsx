@@ -1,0 +1,502 @@
+'use client';
+
+import React, { useState } from 'react';
+
+import { useRouter } from 'next/navigation';
+import { Download, Users, FileSpreadsheet, Calendar, Filter, LogOut } from 'lucide-react';
+import { format } from 'date-fns';
+
+// Dummy Data Types
+interface Student {
+    id: number;
+    name: string;
+    class: string;
+}
+
+interface AttendanceRecord {
+    date: string;
+    subuh: boolean;
+    dhuha: boolean;
+    dzuhur: boolean;
+    ashar: boolean;
+    maghrib: boolean;
+    isya: boolean;
+    tahajjud: boolean;
+    tarawih?: boolean;
+    puasa?: boolean;
+    alquran?: boolean;
+}
+
+export default function AdminDashboard() {
+    const router = useRouter();
+
+    // Mock Database
+    const students: Student[] = [
+        { id: 1, name: 'Ahmad Rizki', class: 'VII-A' },
+        { id: 2, name: 'Budi Santoso', class: 'VII-A' },
+        { id: 3, name: 'Citra Dewi', class: 'VII-B' },
+        { id: 4, name: 'Dewi Sartika', class: 'VIII-A' },
+        { id: 5, name: 'Eko Prasetyo', class: 'IX-C' },
+    ];
+
+    const classes = ['VII-A', 'VII-B', 'VIII-A', 'VIII-B', 'IX-A', 'IX-B', 'IX-C'];
+
+    // State
+    const [exportScope, setExportScope] = useState<'student' | 'class'>('class');
+    const [exportPeriod, setExportPeriod] = useState<'daily' | 'monthly'>('daily');
+
+    const [selectedClass, setSelectedClass] = useState<string>(classes[0]);
+    const [selectedStudentId, setSelectedStudentId] = useState<number>(students[0].id);
+    const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+    const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
+
+    const [previewData, setPreviewData] = useState<{ student: Student, record: AttendanceRecord }[]>([]);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+        const data = students.slice(0, 5).map((student) => ({
+            student,
+            record: generateDummyAttendance(student.name, selectedDate)
+        }));
+        setPreviewData(data);
+    }, [selectedDate]);
+
+    // Helper to generate dummy attendance data
+    const generateDummyAttendance = (studentName: string, date: string): AttendanceRecord => {
+        // Randomize attendance for demo purposes
+        const isPresent = () => Math.random() > 0.2; // 80% chance of presence
+        return {
+            date,
+            subuh: isPresent(),
+            dhuha: isPresent(),
+            dzuhur: isPresent(),
+            ashar: isPresent(),
+            maghrib: isPresent(),
+            isya: isPresent(),
+            tahajjud: Math.random() > 0.7, // Harder to do
+            tarawih: Math.random() > 0.5, // Random for demo
+            puasa: Math.random() > 0.5,
+            alquran: Math.random() > 0.6,
+        };
+    };
+
+    const handleExport = () => {
+        // Dynamically import xlsx-js-style to avoid SSR issues if any, though standard import is fine in client component
+        const XLSX = require('xlsx-js-style');
+
+        const wb = XLSX.utils.book_new();
+        let data: any[] = [];
+        let fileName = '';
+        let sheetName = '';
+        let titleInfo: any[][] = [];
+
+        if (exportScope === 'class') {
+            const targetStudents = students.filter(s => s.class === selectedClass);
+
+            if (exportPeriod === 'daily') {
+                // REPORT: Class - Daily
+                fileName = `Rekap_Kelas_${selectedClass}_${selectedDate}.xlsx`;
+                sheetName = `Harian ${selectedClass}`;
+
+                data = targetStudents.map((s, index) => {
+                    const record = generateDummyAttendance(s.name, selectedDate);
+                    return {
+                        No: index + 1,
+                        Nama: s.name,
+                        Kelas: s.class,
+                        Tanggal: selectedDate,
+                        Subuh: record.subuh ? '✓' : '✗',
+                        Dhuha: record.dhuha ? '✓' : '✗',
+                        Dzuhur: record.dzuhur ? '✓' : '✗',
+                        Ashar: record.ashar ? '✓' : '✗',
+                        Maghrib: record.maghrib ? '✓' : '✗',
+                        Isya: record.isya ? '✓' : '✗',
+                        Tahajjud: record.tahajjud ? '✓' : '✗',
+                        Tarawih: record.tarawih ? '✓' : '✗',
+                        Puasa: record.puasa ? '✓' : '✗',
+                        Quran: record.alquran ? '✓' : '✗',
+                    };
+                });
+
+            } else {
+                // REPORT: Class - Monthly
+                fileName = `Rekap_Bulanan_Kelas_${selectedClass}_${selectedMonth}.xlsx`;
+                sheetName = `Bulanan ${selectedClass}`;
+
+                data = targetStudents.map((s, index) => {
+                    // Simulate 30 days of data
+                    let stats = { subuh: 0, dzuhur: 0, ashar: 0, maghrib: 0, isya: 0, puasa: 0, quran: 0 };
+                    for (let i = 1; i <= 30; i++) {
+                        if (Math.random() > 0.2) stats.subuh++;
+                        if (Math.random() > 0.2) stats.dzuhur++;
+                        if (Math.random() > 0.2) stats.ashar++;
+                        if (Math.random() > 0.2) stats.maghrib++;
+                        if (Math.random() > 0.2) stats.isya++;
+                        if (Math.random() > 0.5) stats.puasa++;
+                        if (Math.random() > 0.6) stats.quran++;
+                    }
+
+                    return {
+                        No: index + 1,
+                        Nama: s.name,
+                        Kelas: s.class,
+                        Bulan: selectedMonth,
+                        'Total Subuh': stats.subuh,
+                        'Total Dzuhur': stats.dzuhur,
+                        'Total Ashar': stats.ashar,
+                        'Total Maghrib': stats.maghrib,
+                        'Total Isya': stats.isya,
+                        'Total Puasa': stats.puasa,
+                        'Total Quran': stats.quran,
+                        'Total Kehadiran': stats.subuh + stats.dzuhur + stats.ashar + stats.maghrib + stats.isya
+                    };
+                });
+            }
+
+        } else {
+            // SCOPE: Student
+            const student = students.find(s => s.id === Number(selectedStudentId));
+            if (!student) return;
+
+            if (exportPeriod === 'daily') {
+                fileName = `Laporan_Harian_${student.name.replace(/\s+/g, '_')}_${selectedDate}.xlsx`;
+                sheetName = 'Laporan Harian';
+                const record = generateDummyAttendance(student.name, selectedDate);
+                data = [{
+                    Nama: student.name,
+                    Kelas: student.class,
+                    Tanggal: selectedDate,
+                    Subuh: record.subuh ? 'Hadir' : 'Tidak',
+                    Dhuha: record.dhuha ? 'Hadir' : 'Tidak',
+                    Dzuhur: record.dzuhur ? 'Hadir' : 'Tidak',
+                    Ashar: record.ashar ? 'Hadir' : 'Tidak',
+                    Maghrib: record.maghrib ? 'Hadir' : 'Tidak',
+                    Isya: record.isya ? 'Hadir' : 'Tidak',
+                    Tahajjud: record.tahajjud ? 'Hadir' : 'Tidak',
+                    Tarawih: record.tarawih ? 'Hadir' : 'Tidak',
+                    Puasa: record.puasa ? 'Ya' : 'Tidak',
+                    Quran: record.alquran ? 'Ya' : 'Tidak',
+                }];
+
+            } else {
+                // REPORT: Student - Monthly
+                fileName = `Laporan_Bulanan_${student.name.replace(/\s+/g, '_')}_${selectedMonth}.xlsx`;
+                sheetName = 'Laporan Bulanan';
+
+                // Add Header Info
+                titleInfo = [
+                    ['Laporan Ibadah Bulanan Siswa MTsN 1 Labuhanbatu'],
+                    [`Nama : ${student.name}`],
+                    [`Kelas : ${student.class}`],
+                    [''] // Spacer
+                ];
+
+                const daysInMonth = 30; // Simplify
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const dayDate = `${selectedMonth}-${String(i).padStart(2, '0')}`;
+                    const record = generateDummyAttendance(student.name, dayDate);
+                    data.push({
+                        Tanggal: dayDate,
+                        // Hari removed
+                        Subuh: record.subuh ? 'v' : '',
+                        Dhuha: record.dhuha ? 'v' : '',
+                        Dzuhur: record.dzuhur ? 'v' : '',
+                        Ashar: record.ashar ? 'v' : '',
+                        Maghrib: record.maghrib ? 'v' : '',
+                        Isya: record.isya ? 'v' : '',
+                        Tahajjud: record.tahajjud ? 'v' : '',
+                        Tarawih: record.tarawih ? 'v' : '',
+                        Puasa: record.puasa ? 'v' : '',
+                        Quran: record.alquran ? 'v' : '',
+                        'Ket.': ''
+                    });
+                }
+            }
+        }
+
+        // Determine start row for data (A1 is 0)
+        const origin = titleInfo.length > 0 ? `A${titleInfo.length + 1}` : 'A1';
+        const ws = XLSX.utils.json_to_sheet(data, { origin });
+
+        // Add Titles if any
+        if (titleInfo.length > 0) {
+            XLSX.utils.sheet_add_aoa(ws, titleInfo, { origin: 'A1' });
+            // Style Title
+            if (ws['A1']) ws['A1'].s = { font: { bold: true, sz: 14 } };
+            if (ws['A2']) ws['A2'].s = { font: { bold: true, sz: 11 } };
+        }
+
+        // Set Column Widths (Fit to Header Text)
+        const colWidths = [
+            { wch: 10 }, // Tanggal
+            { wch: 7 },  // Subuh
+            { wch: 7 },  // Dhuha
+            { wch: 8 },  // Dzuhur
+            { wch: 7 },  // Ashar
+            { wch: 9 },  // Maghrib
+            { wch: 6 },  // Isya
+            { wch: 10 }, // Tahajjud
+            { wch: 9 },  // Tarawih
+            { wch: 7 },  // Puasa
+            { wch: 7 },  // Quran
+            { wch: 5 },  // Ket.
+        ];
+        ws['!cols'] = colWidths;
+
+        // Apply Styles (Border & Font 11) to Data Range
+        const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+        // Start applying styles from the data header row (after titleInfo)
+        const dataStartRow = titleInfo.length > 0 ? titleInfo.length : 0;
+
+        for (let R = dataStartRow; R <= range.e.r; ++R) {
+            for (let C = range.s.c; C <= range.e.c; ++C) {
+                const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!ws[cell_address]) continue;
+
+                // Default Style
+                ws[cell_address].s = {
+                    font: { sz: 11, name: "Calibri" },
+                    border: {
+                        top: { style: "thin", color: { rgb: "000000" } },
+                        bottom: { style: "thin", color: { rgb: "000000" } },
+                        left: { style: "thin", color: { rgb: "000000" } },
+                        right: { style: "thin", color: { rgb: "000000" } }
+                    },
+                    alignment: { horizontal: "center", vertical: "center" }
+                };
+
+                // Header Row Style (Bold)
+                if (R === dataStartRow) {
+                    ws[cell_address].s.font.bold = true;
+                    ws[cell_address].s.fill = { fgColor: { rgb: "EEEEEE" } };
+                }
+
+                // Left align text columns
+                if (C === 0 || C === 11) { // Tanggal or Ket. (approx)
+                    // Adjust index based on actual data keys order if needed, but center is usually fine for dates
+                    // If needed, specific alignment can be added here
+                }
+            }
+        }
+
+        // Add Signature Block (Only for monthly reports or if titleInfo exists)
+        if (titleInfo.length > 0) {
+            XLSX.utils.sheet_add_aoa(ws, [
+                [''],
+                ['', '', '', '', '', '', '', 'Mengetahui,'],
+                ['', '', '', '', '', '', '', 'Wali Murid'],
+                [''],
+                [''],
+                [''],
+                ['', '', '', '', '', '', '', '(_____________________)']
+            ], { origin: -1 });
+        }
+
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        XLSX.writeFile(wb, fileName);
+    };
+
+    const handleLogout = () => {
+        router.push('/');
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-50 p-6 font-sans">
+            {/* ... Header and Stats Cards ... */}
+            <header className="mb-8 flex justify-between items-start">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-800">Dashboard Admin</h1>
+                    <p className="text-gray-500">Absen Sholat MTsN 1 Labuhan Batu</p>
+                </div>
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 transition-colors font-medium"
+                >
+                    <LogOut size={18} />
+                    Logout
+                </button>
+            </header>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div className="bg-blue-100 p-3 rounded-lg text-blue-600">
+                        <Users size={24} />
+                    </div>
+                    <div>
+                        <p className="text-sm text-gray-500">Total Siswa</p>
+                        <p className="text-2xl font-bold text-gray-800">{students.length}</p>
+                    </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div className="bg-green-100 p-3 rounded-lg text-green-600">
+                        <FileSpreadsheet size={24} />
+                    </div>
+                    <div>
+                        <p className="text-sm text-gray-500">Kehadiran Hari Ini</p>
+                        <p className="text-2xl font-bold text-gray-800">85%</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Export Section */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+                <div className="p-6 border-b border-gray-100">
+                    <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <Download size={20} />
+                        Download Laporan / Export Excel
+                    </h2>
+                </div>
+                <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {/* 1. Scope Selection */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                            <Filter size={16} /> Jenis Laporan
+                        </label>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setExportScope('class')}
+                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${exportScope === 'class' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    }`}
+                            >
+                                Per Kelas
+                            </button>
+                            <button
+                                onClick={() => setExportScope('student')}
+                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${exportScope === 'student' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    }`}
+                            >
+                                Per Siswa
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 2. Target Selection */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">
+                            {exportScope === 'class' ? 'Pilih Kelas' : 'Pilih Siswa'}
+                        </label>
+                        {exportScope === 'class' ? (
+                            <select
+                                value={selectedClass}
+                                onChange={(e) => setSelectedClass(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
+                            >
+                                {classes.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
+                        ) : (
+                            <select
+                                value={selectedStudentId}
+                                onChange={(e) => setSelectedStudentId(Number(e.target.value))}
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
+                            >
+                                {students.map(s => <option key={s.id} value={s.id}>{s.name} ({s.class})</option>)}
+                            </select>
+                        )}
+                    </div>
+
+                    {/* 3. Period Selection */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                            <Calendar size={16} /> Periode
+                        </label>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setExportPeriod('daily')}
+                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${exportPeriod === 'daily' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    }`}
+                            >
+                                Harian
+                            </button>
+                            <button
+                                onClick={() => setExportPeriod('monthly')}
+                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${exportPeriod === 'monthly' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    }`}
+                            >
+                                Bulanan
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* 4. Date/Month Picker */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700">
+                            {exportPeriod === 'daily' ? 'Pilih Tanggal' : 'Pilih Bulan'}
+                        </label>
+                        {exportPeriod === 'daily' ? (
+                            <input
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
+                            />
+                        ) : (
+                            <input
+                                type="month"
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
+                            />
+                        )}
+                    </div>
+                </div>
+                <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end">
+                    <button
+                        onClick={handleExport}
+                        className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    >
+                        <Download size={20} />
+                        Download Excel Laporan {exportScope === 'class' ? 'Kelas' : 'Siswa'} ({exportPeriod === 'daily' ? 'Harian' : 'Bulanan'})
+                    </button>
+                </div>
+            </div>
+
+            {/* Preview Table */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 bg-gray-50/50">
+                    <h2 className="text-lg font-semibold text-gray-800">Preview Data Hari Ini</h2>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm text-gray-600">
+                        <thead className="bg-gray-100 text-gray-800 font-semibold uppercase text-xs tracking-wider">
+                            <tr>
+                                <th className="p-4 sticky left-0 bg-gray-100 z-10">Nama</th>
+                                <th className="p-4">Kelas</th>
+                                <th className="p-4 text-center">Tahajjud</th>
+                                <th className="p-4 text-center">Subuh</th>
+                                <th className="p-4 text-center">Dhuha</th>
+                                <th className="p-4 text-center">Dzuhur</th>
+                                <th className="p-4 text-center">Ashar</th>
+                                <th className="p-4 text-center">Maghrib</th>
+                                <th className="p-4 text-center">Isya</th>
+                                <th className="p-4 text-center">Tarawih</th>
+                                <th className="p-4 text-center">Puasa</th>
+                                <th className="p-4 text-center">Qur'an</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {mounted && previewData.map(({ student, record }) => (
+                                <tr key={student.id} className="hover:bg-blue-50 transition-colors">
+                                    <td className="p-4 font-medium text-gray-900 sticky left-0 bg-white hover:bg-blue-50 transition-colors">{student.name}</td>
+                                    <td className="p-4 text-gray-800">{student.class}</td>
+                                    <td className="p-4 text-center">{record.tahajjud ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                    <td className="p-4 text-center">{record.subuh ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                    <td className="p-4 text-center">{record.dhuha ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                    <td className="p-4 text-center">{record.dzuhur ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                    <td className="p-4 text-center">{record.ashar ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                    <td className="p-4 text-center">{record.maghrib ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                    <td className="p-4 text-center">{record.isya ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                    <td className="p-4 text-center">{record.tarawih ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                    <td className="p-4 text-center">{record.puasa ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                    <td className="p-4 text-center">{record.alquran ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+}
