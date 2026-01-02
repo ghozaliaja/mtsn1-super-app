@@ -1,16 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Search, User } from 'lucide-react';
 import Link from 'next/link';
-import { prisma } from '@/lib/prisma'; // This won't work in client component, need API
-// We need to fetch data from an API route or server action.
-// For simplicity, let's assume we'll create an API route /api/students?class=...
 
 export const dynamic = 'force-dynamic';
 
-export default function SelectStudentPage() {
+function StudentSelectionContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const className = searchParams.get('kelas');
@@ -104,5 +101,13 @@ export default function SelectStudentPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function SelectStudentPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+            <StudentSelectionContent />
+        </Suspense>
     );
 }
