@@ -8,10 +8,35 @@ datasource db {
 }
 
 model Student {
+  id         Int          @id @default(autoincrement())
+  name       String
+  class      String
+  nis        String?      @unique
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  attendance Attendance[]
+}
+
+model Attendance {
   id        Int      @id @default(autoincrement())
-  name      String
-  class     String
-  nis       String?  @unique
+  date      String // YYYY-MM-DD
+  studentId Int
+  student   Student  @relation(fields: [studentId], references: [id])
+
+  // Prayer statuses
+  subuh    Boolean @default(false)
+  dhuha    Boolean @default(false)
+  dzuhur   Boolean @default(false)
+  ashar    Boolean @default(false)
+  maghrib  Boolean @default(false)
+  isya     Boolean @default(false)
+  tahajjud Boolean @default(false)
+  tarawih  Boolean @default(false)
+  puasa    Boolean @default(false)
+  alquran  Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([studentId, date]) // One record per student per day
 }

@@ -12,7 +12,7 @@ export default function StudentDashboard() {
     const { prayerTimes, isRamadan, loading, error, city } = usePrayerTimes();
     const [statuses, setStatuses] = useState<Record<string, boolean>>({});
     const [currentTime, setCurrentTime] = useState<string>('');
-    const [student, setStudent] = useState<{ name: string; class: string } | null>(null);
+    const [student, setStudent] = useState<{ id: number; name: string; class: string } | null>(null);
 
     useEffect(() => {
         const storedStudent = localStorage.getItem('studentData');
@@ -23,6 +23,25 @@ export default function StudentDashboard() {
             router.push('/siswa/login');
         }
     }, [router]);
+
+    // Fetch initial attendance from DB
+    useEffect(() => {
+        if (student) {
+            const fetchAttendance = async () => {
+                try {
+                    const date = format(new Date(), 'yyyy-MM-dd');
+                    const res = await fetch(`/api/attendance?studentId=${student.id}&date=${date}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setStatuses(data);
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch attendance', error);
+                }
+            };
+            fetchAttendance();
+        }
+    }, [student]);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -58,8 +77,27 @@ export default function StudentDashboard() {
         return now >= prayerDate;
     };
 
-    const toggleStatus = (id: string) => {
-        setStatuses(prev => ({ ...prev, [id]: !prev[id] }));
+    const toggleStatus = async (id: string) => {
+        const newStatus = !statuses[id];
+        setStatuses(prev => ({ ...prev, [id]: newStatus }));
+
+        if (student) {
+            try {
+                const date = format(new Date(), 'yyyy-MM-dd');
+                await fetch('/api/attendance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentId: student.id,
+                        date: date,
+                        prayer: id,
+                        status: newStatus
+                    })
+                });
+            } catch (error) {
+                console.error('Failed to save attendance', error);
+            }
+        }
     };
 
     const handleLogout = () => {

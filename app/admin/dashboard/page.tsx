@@ -47,37 +47,30 @@ export default function AdminDashboard() {
     const [previewData, setPreviewData] = useState<{ student: Student, record: AttendanceRecord }[]>([]);
     const [mounted, setMounted] = useState(false);
 
-    // Fetch students when class changes
+    // Fetch data when class or date changes
     useEffect(() => {
-        async function fetchStudents() {
+        async function fetchData() {
             try {
-                const res = await fetch(`/api/students?class=${selectedClass}`);
+                const res = await fetch(`/api/attendance?class=${encodeURIComponent(selectedClass)}&date=${selectedDate}`);
                 if (res.ok) {
                     const data = await res.json();
-                    setStudents(data);
-                    if (data.length > 0) {
-                        setSelectedStudentId(data[0].id);
+                    setPreviewData(data);
+
+                    // Update students list for dropdown
+                    const studentList = data.map((item: any) => item.student);
+                    setStudents(studentList);
+
+                    if (studentList.length > 0 && selectedStudentId === 0) {
+                        setSelectedStudentId(studentList[0].id);
                     }
                 }
             } catch (error) {
-                console.error('Failed to fetch students', error);
+                console.error('Failed to fetch data', error);
             }
         }
-        fetchStudents();
-    }, [selectedClass]);
-
-    useEffect(() => {
         setMounted(true);
-        if (students.length > 0) {
-            const data = students.map((student) => ({
-                student,
-                record: generateDummyAttendance(student.name, selectedDate)
-            }));
-            setPreviewData(data);
-        } else {
-            setPreviewData([]);
-        }
-    }, [selectedDate, students]);
+        fetchData();
+    }, [selectedClass, selectedDate]);
 
     // Helper to generate dummy attendance data (Now returns empty/false)
     const generateDummyAttendance = (studentName: string, date: string): AttendanceRecord => {
