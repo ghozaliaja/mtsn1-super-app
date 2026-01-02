@@ -4,61 +4,64 @@ import { prisma } from '@/lib/prisma';
 export const dynamic = 'force-dynamic'; // Force dynamic to avoid caching
 
 export async function GET() {
-    console.log("Seeding VII K started...");
-    const studentsVIIK = [
-        "ABRAHAM ALFATH RITONGA",
-        "ADZRA ZHAAFIRAH TAMBUNAN",
-        "AFIKA PAULENN",
-        "AHMAD RAZAKI ARKAN NASUTION",
-        "AQIFAH ARDINDA HARAHAP",
-        "AYNI AYUNDA",
-        "AZRA KHALILA AZWI LUBIS",
-        "DASTAN DALIMUNTHE",
-        "DINDA ASSYIFA SAMOSIR",
-        "FADLAN NUR FADILLAH",
-        "FADZKA AL-RIZKY SYAHPUTRA NASUTION",
-        "FARHAN AL-HABSY RITONGA",
-        "FAZRY ALFAREZA",
-        "GHINAA AQIILAH",
-        "HADI ADRYSMA",
-        "JIHAN SYAFIRA",
-        "MUHAMMAD ZAIDAAN",
-        "MURSI ALHAPSI SIRAIT",
-        "NAIRA SALSABILA AZZAHRA GULTOM",
-        "NAZLA AULIA SHAFA",
-        "NAZWA AQILAH RITONGA",
-        "NURIYATUN ARBA RAMBE",
-        "PATRAH KHOMARA",
-        "QIANDRA FITRA RAMADHAN TAMBUNAN",
-        "RAYYAN AUFAR",
-        "RIFQAH RESHA IDILYA HASIBUAN",
-        "RIVA PUTRI PADIRA",
-        "SALMA AQILA",
-        "SHEREN AQEELA NATASYA",
-        "SYAFA RAHMA"
+    console.log("Seeding VIII I started...");
+    const studentsVIIII = [
+        "ADILLA MIKAILA RITONGA",
+        "AFIQA ADELIE NASTMAN",
+        "AILA HASYA PUTRI HASIBUAN",
+        "AISY FILZA",
+        "ALIYA THALITA ATMADJA SILABAN",
+        "AQILA FARISAH SIREGAR",
+        "CHERRY LOVELY HARSALIA",
+        "DAFFA HAFIDZ AL FARHAN POHAN",
+        "DARYL ALDRIC RITONGA",
+        "DIFA MAULANA LUBIS",
+        "DITA AZANI HARAHAP",
+        "FAIZ ALFARIZHIE NASUTION",
+        "HUMAIRAH ANGGRAINI RITONGA",
+        "INKA PRISILYA",
+        "LATIFAH AZZAHRA NASUTION",
+        "M.DAFFA LUBIS",
+        "MHD. FAHRI WILDAN JULIANDI",
+        "MIFTAHUR RIZKI",
+        "MUKHTI DARMAWAN SYAHPUTRA RITONG",
+        "MUTIA AZ ZAHRA SIAGIAN",
+        "NAYLA ZUHRAH HASIBUAN",
+        "NAZWA SHAKIRA ALKHAIRI",
+        "QHEIRA ARTHA KHANAYA",
+        "R. MUHAMMAD PARHANSYAH RITONGA",
+        "RAFA KEANU ALPASHA",
+        "RIFKY ADRIAN ASRURI",
+        "RIFQI FRADANA HASIBUAN",
+        "SHOQIA",
+        "VANESSA CERELIA QUINN",
+        "ZAFIRAH RAMADHANI",
+        "ZAIRA RAMADANI",
+        "ZAKI ANGGARA PUTRA",
+        "ZAKY HILMIY"
     ];
 
     try {
-        // Seed VII K only
-        for (const name of studentsVIIK) {
+        // Seed VIII I only
+        for (const name of studentsVIIII) {
             await prisma.student.upsert({
-                where: { nis: `7K-${name.replace(/\s+/g, '-').toLowerCase()}` },
+                where: { nis: `8I-${name.replace(/\s+/g, '-').toLowerCase()}` },
                 update: {},
                 create: {
                     name: name,
-                    class: 'VII K',
-                    nis: `7K-${name.replace(/\s+/g, '-').toLowerCase()}`
+                    class: 'VIII I',
+                    nis: `8I-${name.replace(/\s+/g, '-').toLowerCase()}`
                 },
             });
         }
 
         const count = await prisma.student.count({
-            where: { class: 'VII K' }
+            where: { class: 'VIII I' }
         });
 
         console.log(`Seeding finished. Count: ${count}`);
 
-        return NextResponse.json({ message: 'Seeding successful for VII K', count: count, timestamp: new Date().toISOString() });
+        return NextResponse.json({ message: 'Seeding successful for VIII I', count: count, timestamp: new Date().toISOString() });
     } catch (error) {
         console.error("Seeding error:", error);
         return NextResponse.json({ error: 'Seeding failed', details: error }, { status: 500 });

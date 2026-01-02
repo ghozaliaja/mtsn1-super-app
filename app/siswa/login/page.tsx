@@ -38,6 +38,22 @@ export default function StudentLogin() {
             router.push('/siswa/pilih-siswa?kelas=VII K');
         } else if (nis.toLowerCase() === 'kelasviiia' && password === 'siswa') {
             router.push('/siswa/pilih-siswa?kelas=VIII A');
+        } else if (nis.toLowerCase() === 'kelasviiib' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VIII B');
+        } else if (nis.toLowerCase() === 'kelasviiic' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VIII C');
+        } else if (nis.toLowerCase() === 'kelasviiid' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VIII D');
+        } else if (nis.toLowerCase() === 'kelasviiie' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VIII E');
+        } else if (nis.toLowerCase() === 'kelasviiif' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VIII F');
+        } else if (nis.toLowerCase() === 'kelasviiig' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VIII G');
+        } else if (nis.toLowerCase() === 'kelasviiih' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VIII H');
+        } else if (nis.toLowerCase() === 'kelasviiii' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VIII I');
         } else {
             alert('Username atau password salah!');
         }
