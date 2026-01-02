@@ -79,22 +79,20 @@ export default function AdminDashboard() {
         }
     }, [selectedDate, students]);
 
-    // Helper to generate dummy attendance data
+    // Helper to generate dummy attendance data (Now returns empty/false)
     const generateDummyAttendance = (studentName: string, date: string): AttendanceRecord => {
-        // Randomize attendance for demo purposes
-        const isPresent = () => Math.random() > 0.2; // 80% chance of presence
         return {
             date,
-            subuh: isPresent(),
-            dhuha: isPresent(),
-            dzuhur: isPresent(),
-            ashar: isPresent(),
-            maghrib: isPresent(),
-            isya: isPresent(),
-            tahajjud: Math.random() > 0.7, // Harder to do
-            tarawih: Math.random() > 0.5, // Random for demo
-            puasa: Math.random() > 0.5,
-            alquran: Math.random() > 0.6,
+            subuh: false,
+            dhuha: false,
+            dzuhur: false,
+            ashar: false,
+            maghrib: false,
+            isya: false,
+            tahajjud: false,
+            tarawih: false,
+            puasa: false,
+            alquran: false,
         };
     };
 
