@@ -8,6 +8,8 @@ import { prisma } from '@/lib/prisma'; // This won't work in client component, n
 // We need to fetch data from an API route or server action.
 // For simplicity, let's assume we'll create an API route /api/students?class=...
 
+export const dynamic = 'force-dynamic';
+
 export default function SelectStudentPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
