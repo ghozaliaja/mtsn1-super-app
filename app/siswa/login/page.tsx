@@ -36,6 +36,8 @@ export default function StudentLogin() {
             router.push('/siswa/pilih-siswa?kelas=VII J');
         } else if (nis.toLowerCase() === 'kelasviik' && password === 'siswa') {
             router.push('/siswa/pilih-siswa?kelas=VII K');
+        } else if (nis.toLowerCase() === 'kelasviiia' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VIII A');
         } else {
             alert('Username atau password salah!');
         }
