@@ -3,14 +3,42 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { User, ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
 
 export default function StudentLogin() {
     const router = useRouter();
+    const [nis, setNis] = useState('');
+    const [password, setPassword] = useState('');
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
-        // Simulate login
-        router.push('/siswa/dashboard');
+
+        // Simple hardcoded check for Class VII A
+        if (nis.toLowerCase() === 'kelasviia' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VII A');
+        } else if (nis.toLowerCase() === 'kelasviib' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VII B');
+        } else if (nis.toLowerCase() === 'kelasviic' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VII C');
+        } else if (nis.toLowerCase() === 'kelasviid' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VII D');
+        } else if (nis.toLowerCase() === 'kelasviie' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VII E');
+        } else if (nis.toLowerCase() === 'kelasviif' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VII F');
+        } else if (nis.toLowerCase() === 'kelasviig' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VII G');
+        } else if (nis.toLowerCase() === 'kelasviih' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VII H');
+        } else if (nis.toLowerCase() === 'kelasviii' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VII I');
+        } else if (nis.toLowerCase() === 'kelasviij' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VII J');
+        } else if (nis.toLowerCase() === 'kelasviik' && password === 'siswa') {
+            router.push('/siswa/pilih-siswa?kelas=VII K');
+        } else {
+            alert('Username atau password salah!');
+        }
     };
 
     return (
@@ -29,11 +57,13 @@ export default function StudentLogin() {
 
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">NIS / Username</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Username Kelas</label>
                         <input
                             type="text"
+                            value={nis}
+                            onChange={(e) => setNis(e.target.value)}
                             className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900"
-                            placeholder="Masukkan NIS"
+                            placeholder="Masukkan username kelas"
                             required
                         />
                     </div>
@@ -41,6 +71,8 @@ export default function StudentLogin() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
                         <input
                             type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
                             className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900"
                             placeholder="Masukkan Password"
                             required

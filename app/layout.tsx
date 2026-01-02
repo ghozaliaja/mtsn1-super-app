@@ -29,7 +29,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased relative min-h-screen`}
       >
-        <div className="fixed inset-0 z-0">
+        <div className="fixed inset-0 z-0 bg-slate-950">
           <GridScan
             scanColor="#6366f1" // Indigo-500
             linesColor="#e0e7ff" // Indigo-100

@@ -12,6 +12,17 @@ export default function StudentDashboard() {
     const { prayerTimes, isRamadan, loading, error, city } = usePrayerTimes();
     const [statuses, setStatuses] = useState<Record<string, boolean>>({});
     const [currentTime, setCurrentTime] = useState<string>('');
+    const [student, setStudent] = useState<{ name: string; class: string } | null>(null);
+
+    useEffect(() => {
+        const storedStudent = localStorage.getItem('studentData');
+        if (storedStudent) {
+            setStudent(JSON.parse(storedStudent));
+        } else {
+            // Redirect to login if no student data found
+            router.push('/siswa/login');
+        }
+    }, [router]);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -29,12 +40,12 @@ export default function StudentDashboard() {
         { id: 'ashar', name: 'Sholat Ashar', time: prayerTimes?.Asr || '15:30' },
         { id: 'maghrib', name: 'Sholat Maghrib', time: prayerTimes?.Maghrib || '18:15' },
         { id: 'isya', name: 'Sholat Isya', time: prayerTimes?.Isha || '19:30' },
-        { id: 'puasa', name: 'Puasa', time: 'Sepanjang hari' },
         { id: 'alquran', name: 'Baca Al Qur\'an', time: 'Sepanjang hari' },
     ];
 
     if (isRamadan) {
         prayers.splice(7, 0, { id: 'tarawih', name: 'Sholat Tarawih', time: '20:00' });
+        prayers.splice(8, 0, { id: 'puasa', name: 'Puasa', time: 'Sepanjang hari' });
     }
 
     const isTimePassed = (timeStr: string) => {
@@ -52,6 +63,7 @@ export default function StudentDashboard() {
     };
 
     const handleLogout = () => {
+        localStorage.removeItem('studentData');
         router.push('/');
     };
 
@@ -95,9 +107,27 @@ export default function StudentDashboard() {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-sm text-blue-100 bg-blue-700/50 p-2 rounded-lg backdrop-blur-sm">
+                {/* Student Info */}
+                <div className="mb-4 bg-blue-700/30 p-3 rounded-xl border border-blue-500/30">
+                    <div className="flex justify-between items-center mb-1">
+                        <span className="text-blue-100 text-sm">Nama :</span>
+                        <span className="font-semibold truncate max-w-[200px]">{student?.name || 'Siswa'}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-blue-100 text-sm">Kelas :</span>
+                        <span className="font-semibold">{student?.class || '-'}</span>
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm text-blue-100 bg-blue-700/50 p-2 rounded-lg backdrop-blur-sm mb-2">
                     <MapPin size={16} />
                     <span>{city}</span>
+                </div>
+
+                <div className="text-center">
+                    <p className="text-xs text-yellow-200 italic font-medium">
+                        "Mohon diisi dengan jujur, karena Allah Maha Melihat"
+                    </p>
                 </div>
             </header>
 

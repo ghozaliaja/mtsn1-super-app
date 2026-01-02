@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePrayerTimes } from '../../hooks/usePrayerTimes';
 
 import { useRouter } from 'next/navigation';
 import { Download, Users, FileSpreadsheet, Calendar, Filter, LogOut } from 'lucide-react';
@@ -29,38 +30,54 @@ interface AttendanceRecord {
 
 export default function AdminDashboard() {
     const router = useRouter();
-
-    // Mock Database
-    const students: Student[] = [
-        { id: 1, name: 'Ahmad Rizki', class: 'VII-A' },
-        { id: 2, name: 'Budi Santoso', class: 'VII-A' },
-        { id: 3, name: 'Citra Dewi', class: 'VII-B' },
-        { id: 4, name: 'Dewi Sartika', class: 'VIII-A' },
-        { id: 5, name: 'Eko Prasetyo', class: 'IX-C' },
-    ];
-
-    const classes = ['VII-A', 'VII-B', 'VIII-A', 'VIII-B', 'IX-A', 'IX-B', 'IX-C'];
+    const { isRamadan } = usePrayerTimes();
 
     // State
+    const [students, setStudents] = useState<Student[]>([]);
+    const [classes] = useState(['VII A', 'VII B', 'VII C', 'VII D', 'VII E', 'VII F', 'VII G', 'VII H', 'VII I', 'VII J', 'VII K']); // Updated classes
+
     const [exportScope, setExportScope] = useState<'student' | 'class'>('class');
     const [exportPeriod, setExportPeriod] = useState<'daily' | 'monthly'>('daily');
 
-    const [selectedClass, setSelectedClass] = useState<string>(classes[0]);
-    const [selectedStudentId, setSelectedStudentId] = useState<number>(students[0].id);
+    const [selectedClass, setSelectedClass] = useState<string>('VII A');
+    const [selectedStudentId, setSelectedStudentId] = useState<number>(0);
     const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
     const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
 
     const [previewData, setPreviewData] = useState<{ student: Student, record: AttendanceRecord }[]>([]);
     const [mounted, setMounted] = useState(false);
 
+    // Fetch students when class changes
+    useEffect(() => {
+        async function fetchStudents() {
+            try {
+                const res = await fetch(`/api/students?class=${selectedClass}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setStudents(data);
+                    if (data.length > 0) {
+                        setSelectedStudentId(data[0].id);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch students', error);
+            }
+        }
+        fetchStudents();
+    }, [selectedClass]);
+
     useEffect(() => {
         setMounted(true);
-        const data = students.slice(0, 5).map((student) => ({
-            student,
-            record: generateDummyAttendance(student.name, selectedDate)
-        }));
-        setPreviewData(data);
-    }, [selectedDate]);
+        if (students.length > 0) {
+            const data = students.map((student) => ({
+                student,
+                record: generateDummyAttendance(student.name, selectedDate)
+            }));
+            setPreviewData(data);
+        } else {
+            setPreviewData([]);
+        }
+    }, [selectedDate, students]);
 
     // Helper to generate dummy attendance data
     const generateDummyAttendance = (studentName: string, date: string): AttendanceRecord => {
@@ -471,8 +488,8 @@ export default function AdminDashboard() {
                                 <th className="p-4 text-center">Ashar</th>
                                 <th className="p-4 text-center">Maghrib</th>
                                 <th className="p-4 text-center">Isya</th>
-                                <th className="p-4 text-center">Tarawih</th>
-                                <th className="p-4 text-center">Puasa</th>
+                                {isRamadan && <th className="p-4 text-center">Tarawih</th>}
+                                {isRamadan && <th className="p-4 text-center">Puasa</th>}
                                 <th className="p-4 text-center">Qur'an</th>
                             </tr>
                         </thead>
@@ -488,8 +505,8 @@ export default function AdminDashboard() {
                                     <td className="p-4 text-center">{record.ashar ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
                                     <td className="p-4 text-center">{record.maghrib ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
                                     <td className="p-4 text-center">{record.isya ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                    <td className="p-4 text-center">{record.tarawih ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                    <td className="p-4 text-center">{record.puasa ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                    {isRamadan && <td className="p-4 text-center">{record.tarawih ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>}
+                                    {isRamadan && <td className="p-4 text-center">{record.puasa ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>}
                                     <td className="p-4 text-center">{record.alquran ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
                                 </tr>
                             ))}
