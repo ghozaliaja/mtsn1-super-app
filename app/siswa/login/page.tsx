@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { User, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 
+import { CLASSES } from '../../../lib/constants';
+
 export default function StudentLogin() {
     const router = useRouter();
     const [nis, setNis] = useState('');
@@ -13,47 +15,13 @@ export default function StudentLogin() {
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Simple hardcoded check for Class VII A
-        if (nis.toLowerCase() === 'kelasviia' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VII A');
-        } else if (nis.toLowerCase() === 'kelasviib' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VII B');
-        } else if (nis.toLowerCase() === 'kelasviic' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VII C');
-        } else if (nis.toLowerCase() === 'kelasviid' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VII D');
-        } else if (nis.toLowerCase() === 'kelasviie' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VII E');
-        } else if (nis.toLowerCase() === 'kelasviif' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VII F');
-        } else if (nis.toLowerCase() === 'kelasviig' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VII G');
-        } else if (nis.toLowerCase() === 'kelasviih' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VII H');
-        } else if (nis.toLowerCase() === 'kelasviii' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VII I');
-        } else if (nis.toLowerCase() === 'kelasviij' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VII J');
-        } else if (nis.toLowerCase() === 'kelasviik' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VII K');
-        } else if (nis.toLowerCase() === 'kelasviiia' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VIII A');
-        } else if (nis.toLowerCase() === 'kelasviiib' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VIII B');
-        } else if (nis.toLowerCase() === 'kelasviiic' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VIII C');
-        } else if (nis.toLowerCase() === 'kelasviiid' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VIII D');
-        } else if (nis.toLowerCase() === 'kelasviiie' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VIII E');
-        } else if (nis.toLowerCase() === 'kelasviiif' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VIII F');
-        } else if (nis.toLowerCase() === 'kelasviiig' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VIII G');
-        } else if (nis.toLowerCase() === 'kelasviiih' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VIII H');
-        } else if (nis.toLowerCase() === 'kelasviiii' && password === 'siswa') {
-            router.push('/siswa/pilih-siswa?kelas=VIII I');
+        const inputClass = nis.toLowerCase().replace(/\s/g, '');
+        const matchedClass = CLASSES.find(c =>
+            `kelas${c.toLowerCase().replace(/\s/g, '')}` === inputClass
+        );
+
+        if (matchedClass && password === 'siswa') {
+            router.push(`/siswa/pilih-siswa?kelas=${encodeURIComponent(matchedClass)}`);
         } else {
             alert('Username atau password salah!');
         }

@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 import { Download, Users, FileSpreadsheet, Calendar, Filter, LogOut } from 'lucide-react';
 import { format } from 'date-fns';
 
+import { CLASSES } from '../../../lib/constants';
+
 // Dummy Data Types
 interface Student {
     id: number;
@@ -34,7 +36,7 @@ export default function AdminDashboard() {
 
     // State
     const [students, setStudents] = useState<Student[]>([]);
-    const [classes] = useState(['VII A', 'VII B', 'VII C', 'VII D', 'VII E', 'VII F', 'VII G', 'VII H', 'VII I', 'VII J', 'VII K']); // Updated classes
+    const [classes] = useState(CLASSES); // Updated classes
 
     const [exportScope, setExportScope] = useState<'student' | 'class'>('class');
     const [exportPeriod, setExportPeriod] = useState<'daily' | 'monthly'>('daily');
