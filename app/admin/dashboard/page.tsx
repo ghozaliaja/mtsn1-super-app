@@ -49,8 +49,37 @@ export default function AdminDashboard() {
     const [previewData, setPreviewData] = useState<{ student: Student, record: AttendanceRecord }[]>([]);
     const [mounted, setMounted] = useState(false);
 
+    // Auth State
+    const [userRole, setUserRole] = useState<'admin' | 'teacher' | null>(null);
+    const [userClass, setUserClass] = useState<string | null>(null);
+
+    // Check Auth on Mount
+    useEffect(() => {
+        const session = localStorage.getItem('userSession');
+        if (!session) {
+            router.push('/admin/login');
+            return;
+        }
+
+        try {
+            const { role, className } = JSON.parse(session);
+            setUserRole(role);
+
+            if (role === 'teacher' && className) {
+                setUserClass(className);
+                setSelectedClass(className);
+            }
+            setMounted(true);
+        } catch (e) {
+            localStorage.removeItem('userSession');
+            router.push('/admin/login');
+        }
+    }, [router]);
+
     // Fetch data when class or date changes
     useEffect(() => {
+        if (!mounted) return;
+
         async function fetchData() {
             try {
                 const res = await fetch(`/api/attendance?class=${encodeURIComponent(selectedClass)}&date=${selectedDate}`);
@@ -70,9 +99,8 @@ export default function AdminDashboard() {
                 console.error('Failed to fetch data', error);
             }
         }
-        setMounted(true);
         fetchData();
-    }, [selectedClass, selectedDate]);
+    }, [selectedClass, selectedDate, mounted]);
 
     // Helper to generate dummy attendance data (Now returns empty/false)
     const generateDummyAttendance = (studentName: string, date: string): AttendanceRecord => {
@@ -308,15 +336,20 @@ export default function AdminDashboard() {
     };
 
     const handleLogout = () => {
+        localStorage.removeItem('userSession');
         router.push('/');
     };
+
+    if (!mounted) return null;
 
     return (
         <div className="min-h-screen bg-gray-50 p-6 font-sans">
             {/* ... Header and Stats Cards ... */}
             <header className="mb-8 flex justify-between items-start">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-800">Dashboard Admin</h1>
+                    <h1 className="text-3xl font-bold text-gray-800">
+                        Dashboard {userRole === 'admin' ? 'Admin' : `Guru Kelas ${userClass}`}
+                    </h1>
                     <p className="text-gray-500">Absen Sholat MTsN 1 Labuhan Batu</p>
                 </div>
                 <button
@@ -392,7 +425,8 @@ export default function AdminDashboard() {
                             <select
                                 value={selectedClass}
                                 onChange={(e) => setSelectedClass(e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
+                                disabled={userRole === 'teacher'}
+                                className={`w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-800 ${userRole === 'teacher' ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                             >
                                 {classes.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
