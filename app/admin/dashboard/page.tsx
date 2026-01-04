@@ -332,7 +332,16 @@ export default function AdminDashboard() {
         }
 
         XLSX.utils.book_append_sheet(wb, ws, sheetName);
-        XLSX.writeFile(wb, fileName);
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
     };
 
     const handleLogout = () => {

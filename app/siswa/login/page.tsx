@@ -15,7 +15,13 @@ export default function StudentLogin() {
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
 
-        const inputClass = nis.toLowerCase().replace(/\s/g, '');
+        let inputClass = nis.toLowerCase().replace(/\s/g, '');
+
+        // Map Arabic numerals to Roman numerals for class levels
+        inputClass = inputClass.replace('kelas7', 'kelasvii');
+        inputClass = inputClass.replace('kelas8', 'kelasviii');
+        inputClass = inputClass.replace('kelas9', 'kelasix');
+
         const matchedClass = CLASSES.find(c =>
             `kelas${c.toLowerCase().replace(/\s/g, '')}` === inputClass
         );
