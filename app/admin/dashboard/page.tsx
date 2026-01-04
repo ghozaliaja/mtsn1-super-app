@@ -215,13 +215,19 @@ export default function AdminDashboard() {
                 fileName = `Laporan_Harian_${student.name.replace(/\s+/g, '_')}_${selectedDate}.xlsx`;
                 sheetName = 'Laporan Harian';
 
+                // Add Header Info
+                titleInfo = [
+                    ['Laporan Ibadah Harian Siswa MTsN 1 Labuhanbatu'],
+                    [`Nama : ${student.name}`],
+                    [`Kelas : ${student.class}`],
+                    [''] // Spacer
+                ];
+
                 // Find record from previewData
                 const studentData = previewData.find(p => p.student.id === student.id);
                 const record = studentData ? studentData.record : generateDummyAttendance(student.name, selectedDate);
 
                 data = [{
-                    Nama: student.name,
-                    Kelas: student.class,
                     Tanggal: selectedDate,
                     Subuh: record.subuh ? 'Hadir' : 'Tidak',
                     Dhuha: record.dhuha ? 'Hadir' : 'Tidak',
