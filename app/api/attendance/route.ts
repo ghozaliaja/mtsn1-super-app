@@ -51,76 +51,131 @@ export async function GET(request: Request) {
     const className = searchParams.get('class');
     const studentId = searchParams.get('studentId');
     const date = searchParams.get('date');
+    const month = searchParams.get('month'); // Format: YYYY-MM
 
-    if (!date) {
-        return NextResponse.json({ error: 'Missing date parameter' }, { status: 400 });
+    if (!date && !month) {
+        return NextResponse.json({ error: 'Missing date or month parameter' }, { status: 400 });
     }
 
     try {
         // Fetch single student attendance
         if (studentId) {
-            const record = await prisma.attendance.findUnique({
-                where: {
-                    studentId_date: {
+            if (month) {
+                // Fetch monthly records for student
+                const records = await prisma.attendance.findMany({
+                    where: {
                         studentId: Number(studentId),
-                        date: date
+                        date: {
+                            startsWith: month
+                        }
+                    },
+                    orderBy: { date: 'asc' }
+                });
+                return NextResponse.json(records);
+            } else {
+                // Fetch daily record for student
+                const record = await prisma.attendance.findUnique({
+                    where: {
+                        studentId_date: {
+                            studentId: Number(studentId),
+                            date: date!
+                        }
                     }
-                }
-            });
+                });
 
-            // Return formatted record or default false
-            if (!record) {
+                // Return formatted record or default false
+                if (!record) {
+                    return NextResponse.json({
+                        subuh: false, dhuha: false, dzuhur: false, ashar: false,
+                        maghrib: false, isya: false, tahajjud: false, tarawih: false,
+                        puasa: false, alquran: false
+                    });
+                }
+
                 return NextResponse.json({
-                    subuh: false, dhuha: false, dzuhur: false, ashar: false,
-                    maghrib: false, isya: false, tahajjud: false, tarawih: false,
-                    puasa: false, alquran: false
+                    subuh: record.subuh, dhuha: record.dhuha, dzuhur: record.dzuhur,
+                    ashar: record.ashar, maghrib: record.maghrib, isya: record.isya,
+                    tahajjud: record.tahajjud, tarawih: record.tarawih,
+                    puasa: record.puasa, alquran: record.alquran
                 });
             }
-
-            return NextResponse.json({
-                subuh: record.subuh, dhuha: record.dhuha, dzuhur: record.dzuhur,
-                ashar: record.ashar, maghrib: record.maghrib, isya: record.isya,
-                tahajjud: record.tahajjud, tarawih: record.tarawih,
-                puasa: record.puasa, alquran: record.alquran
-            });
         }
 
         if (!className) {
             return NextResponse.json({ error: 'Missing class parameter' }, { status: 400 });
         }
 
-        const students = await prisma.student.findMany({
-            where: { class: className },
-            include: {
-                attendance: {
-                    where: { date: date }
-                }
-            },
-            orderBy: { name: 'asc' }
-        });
+        if (month) {
+            // Fetch monthly records for a class
+            const students = await prisma.student.findMany({
+                where: { class: className },
+                include: {
+                    attendance: {
+                        where: {
+                            date: {
+                                startsWith: month
+                            }
+                        },
+                        orderBy: { date: 'asc' }
+                    }
+                },
+                orderBy: { name: 'asc' }
+            });
 
-        // Format response for frontend
-        const data = students.map(student => {
-            const record = student.attendance[0] || {};
-            return {
+            const data = students.map(student => ({
                 student: { id: student.id, name: student.name, class: student.class },
-                record: {
-                    date: date,
-                    subuh: record.subuh || false,
-                    dhuha: record.dhuha || false,
-                    dzuhur: record.dzuhur || false,
-                    ashar: record.ashar || false,
-                    maghrib: record.maghrib || false,
-                    isya: record.isya || false,
-                    tahajjud: record.tahajjud || false,
-                    tarawih: record.tarawih || false,
-                    puasa: record.puasa || false,
-                    alquran: record.alquran || false,
-                }
-            };
-        });
+                records: student.attendance.map(record => ({
+                    date: record.date,
+                    subuh: record.subuh,
+                    dhuha: record.dhuha,
+                    dzuhur: record.dzuhur,
+                    ashar: record.ashar,
+                    maghrib: record.maghrib,
+                    isya: record.isya,
+                    tahajjud: record.tahajjud,
+                    tarawih: record.tarawih,
+                    puasa: record.puasa,
+                    alquran: record.alquran,
+                }))
+            }));
 
-        return NextResponse.json(data);
+            return NextResponse.json(data);
+
+        } else {
+            // Fetch daily records for a class
+            const students = await prisma.student.findMany({
+                where: { class: className },
+                include: {
+                    attendance: {
+                        where: { date: date! }
+                    }
+                },
+                orderBy: { name: 'asc' }
+            });
+
+            // Format response for frontend
+            const data = students.map(student => {
+                const record = student.attendance[0] || {};
+                return {
+                    student: { id: student.id, name: student.name, class: student.class },
+                    record: {
+                        date: date,
+                        subuh: record.subuh || false,
+                        dhuha: record.dhuha || false,
+                        dzuhur: record.dzuhur || false,
+                        ashar: record.ashar || false,
+                        maghrib: record.maghrib || false,
+                        isya: record.isya || false,
+                        tahajjud: record.tahajjud || false,
+                        tarawih: record.tarawih || false,
+                        puasa: record.puasa || false,
+                        alquran: record.alquran || false,
+                    }
+                };
+            });
+
+            return NextResponse.json(data);
+        }
     } catch (error) {
         console.error('Error fetching attendance:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

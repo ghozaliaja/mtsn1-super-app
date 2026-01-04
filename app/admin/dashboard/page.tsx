@@ -165,28 +165,29 @@ export default function AdminDashboard() {
 
             } else {
                 // REPORT: Class - Monthly
-                // NOTE: For monthly report, we ideally need to fetch monthly data from API.
-                // Current API only supports daily. For now, we will warn or use daily data as placeholder?
-                // Or better, we should fetch monthly data.
-                // Given the constraints and current API, I'll keep the dummy simulation for monthly BUT
-                // for DAILY export (which is what the user likely tested), it MUST be correct.
-                // The user complaint "hasil excel nya kok gk sesuai yg di aplikasi" refers to the daily view they see.
-
                 fileName = `Rekap_Bulanan_Kelas_${selectedClass}_${selectedMonth}.xlsx`;
                 sheetName = `Bulanan ${selectedClass}`;
 
-                data = targetStudents.map((s, index) => {
-                    // Simulate 30 days of data (KEEPING DUMMY FOR MONTHLY AS API IS MISSING)
+                // Fetch monthly data from API
+                const res = await fetch(`/api/attendance?class=${encodeURIComponent(selectedClass)}&month=${selectedMonth}`);
+                if (!res.ok) throw new Error('Failed to fetch monthly data');
+                const monthlyData = await res.json();
+
+                data = monthlyData.map((item: any, index: number) => {
+                    const s = item.student;
+                    const records = item.records || [];
+
+                    // Calculate stats
                     let stats = { subuh: 0, dzuhur: 0, ashar: 0, maghrib: 0, isya: 0, puasa: 0, quran: 0 };
-                    for (let i = 1; i <= 30; i++) {
-                        if (Math.random() > 0.2) stats.subuh++;
-                        if (Math.random() > 0.2) stats.dzuhur++;
-                        if (Math.random() > 0.2) stats.ashar++;
-                        if (Math.random() > 0.2) stats.maghrib++;
-                        if (Math.random() > 0.2) stats.isya++;
-                        if (Math.random() > 0.5) stats.puasa++;
-                        if (Math.random() > 0.6) stats.quran++;
-                    }
+                    records.forEach((r: any) => {
+                        if (r.subuh) stats.subuh++;
+                        if (r.dzuhur) stats.dzuhur++;
+                        if (r.ashar) stats.ashar++;
+                        if (r.maghrib) stats.maghrib++;
+                        if (r.isya) stats.isya++;
+                        if (r.puasa) stats.puasa++;
+                        if (r.alquran) stats.quran++;
+                    });
 
                     return {
                         No: index + 1,
@@ -247,11 +248,18 @@ export default function AdminDashboard() {
                     [''] // Spacer
                 ];
 
-                const daysInMonth = 30; // Simplify
+                // Fetch monthly data for student
+                const res = await fetch(`/api/attendance?studentId=${student.id}&month=${selectedMonth}`);
+                if (!res.ok) throw new Error('Failed to fetch monthly data');
+                const records = await res.json();
+
+                const daysInMonth = new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate();
+
                 for (let i = 1; i <= daysInMonth; i++) {
                     const dayDate = `${selectedMonth}-${String(i).padStart(2, '0')}`;
-                    // KEEPING DUMMY FOR MONTHLY
-                    const record = generateDummyAttendance(student.name, dayDate);
+                    // Find record for this date
+                    const record = records.find((r: any) => r.date === dayDate) || generateDummyAttendance(student.name, dayDate);
+
                     data.push({
                         Tanggal: dayDate,
                         // Hari removed
