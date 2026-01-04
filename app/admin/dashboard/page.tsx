@@ -379,7 +379,13 @@ export default function AdminDashboard() {
                     </div>
                     <div>
                         <p className="text-sm text-gray-500">Kehadiran Hari Ini</p>
-                        <p className="text-2xl font-bold text-gray-800">85%</p>
+                        <p className="text-2xl font-bold text-gray-800">
+                            {students.length > 0 ? Math.round((previewData.filter(({ record }) =>
+                                record.subuh || record.dhuha || record.dzuhur || record.ashar ||
+                                record.maghrib || record.isya || record.tahajjud ||
+                                (isRamadan && record.tarawih) || (isRamadan && record.puasa) || record.alquran
+                            ).length / students.length) * 100) : 0}%
+                        </p>
                     </div>
                 </div>
             </div>
