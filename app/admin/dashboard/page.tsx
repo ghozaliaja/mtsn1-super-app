@@ -246,11 +246,21 @@ export default function AdminDashboard() {
                 fileName = `Laporan_Bulanan_${student.name.replace(/\s+/g, '_')}_${selectedMonth}.xlsx`;
                 sheetName = 'Laporan Bulanan';
 
+                // Format Month Year
+                const [year, month] = selectedMonth.split('-');
+                const monthNames = [
+                    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                ];
+                const monthName = monthNames[parseInt(month) - 1];
+                const formattedMonth = `${monthName} ${year}`;
+
                 // Add Header Info
                 titleInfo = [
                     ['Laporan Ibadah Bulanan Siswa MTsN 1 Labuhanbatu'],
                     [`Nama : ${student.name}`],
                     [`Kelas : ${student.class}`],
+                    [`Bulan : ${formattedMonth}`],
                     [''] // Spacer
                 ];
 
@@ -267,19 +277,18 @@ export default function AdminDashboard() {
                     const record = records.find((r: any) => r.date === dayDate) || generateDummyAttendance(student.name, dayDate);
 
                     data.push({
-                        Tanggal: dayDate,
-                        // Hari removed
-                        Subuh: record.subuh ? 'v' : '',
-                        Dhuha: record.dhuha ? 'v' : '',
-                        Dzuhur: record.dzuhur ? 'v' : '',
-                        Ashar: record.ashar ? 'v' : '',
-                        Maghrib: record.maghrib ? 'v' : '',
+                        Tgl: String(i).padStart(2, '0'),
+                        Sbh: record.subuh ? 'v' : '',
+                        Dha: record.dhuha ? 'v' : '',
+                        Dzhr: record.dzuhur ? 'v' : '',
+                        Ashr: record.ashar ? 'v' : '',
+                        Magh: record.maghrib ? 'v' : '',
                         Isya: record.isya ? 'v' : '',
-                        Tahajjud: record.tahajjud ? 'v' : '',
-                        Tarawih: record.tarawih ? 'v' : '',
-                        Puasa: record.puasa ? 'v' : '',
-                        Quran: record.alquran ? 'v' : '',
-                        'Ket.': ''
+                        Tahaj: record.tahajjud ? 'v' : '',
+                        Tarw: record.tarawih ? 'v' : '',
+                        Psa: record.puasa ? 'v' : '',
+                        Qrn: record.alquran ? 'v' : '',
+                        Ket: ''
                     });
                 }
             }
@@ -295,22 +304,24 @@ export default function AdminDashboard() {
             // Style Title
             if (ws['A1']) ws['A1'].s = { font: { bold: true, sz: 14 } };
             if (ws['A2']) ws['A2'].s = { font: { bold: true, sz: 11 } };
+            if (ws['A3']) ws['A3'].s = { font: { bold: true, sz: 11 } };
+            if (ws['A4']) ws['A4'].s = { font: { bold: true, sz: 11 } };
         }
 
-        // Set Column Widths (Fit to Header Text)
+        // Set Column Widths (Fit to Header Text - Optimized for A4)
         const colWidths = [
-            { wch: 10 }, // Tanggal
-            { wch: 7 },  // Subuh
-            { wch: 7 },  // Dhuha
-            { wch: 8 },  // Dzuhur
-            { wch: 7 },  // Ashar
-            { wch: 9 },  // Maghrib
-            { wch: 6 },  // Isya
-            { wch: 10 }, // Tahajjud
-            { wch: 9 },  // Tarawih
-            { wch: 7 },  // Puasa
-            { wch: 7 },  // Quran
-            { wch: 5 },  // Ket.
+            { wch: 5 },  // Tgl
+            { wch: 5 },  // Sbh
+            { wch: 5 },  // Dha
+            { wch: 5 },  // Dzhr
+            { wch: 5 },  // Ashr
+            { wch: 6 },  // Magh
+            { wch: 5 },  // Isya
+            { wch: 6 },  // Tahaj
+            { wch: 6 },  // Tarw
+            { wch: 5 },  // Psa
+            { wch: 5 },  // Qrn
+            { wch: 5 },  // Ket
         ];
         ws['!cols'] = colWidths;
 
