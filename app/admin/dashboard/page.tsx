@@ -119,9 +119,12 @@ export default function AdminDashboard() {
         };
     };
 
-    const handleExport = () => {
-        // Dynamically import xlsx-js-style to avoid SSR issues if any, though standard import is fine in client component
+    const handleExport = async () => {
+        // Dynamically import xlsx-js-style
         const XLSX = require('xlsx-js-style');
+        const { Capacitor } = require('@capacitor/core');
+        const { Filesystem, Directory } = require('@capacitor/filesystem');
+        const { Share } = require('@capacitor/share');
 
         const wb = XLSX.utils.book_new();
         let data: any[] = [];
@@ -309,12 +312,6 @@ export default function AdminDashboard() {
                     ws[cell_address].s.font.bold = true;
                     ws[cell_address].s.fill = { fgColor: { rgb: "EEEEEE" } };
                 }
-
-                // Left align text columns
-                if (C === 0 || C === 11) { // Tanggal or Ket. (approx)
-                    // Adjust index based on actual data keys order if needed, but center is usually fine for dates
-                    // If needed, specific alignment can be added here
-                }
             }
         }
 
@@ -332,16 +329,40 @@ export default function AdminDashboard() {
         }
 
         XLSX.utils.book_append_sheet(wb, ws, sheetName);
-        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-        const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+
+        // Check if Native Platform
+        if (Capacitor.isNativePlatform()) {
+            try {
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+                const savedFile = await Filesystem.writeFile({
+                    path: fileName,
+                    data: wbout,
+                    directory: Directory.Cache
+                });
+
+                await Share.share({
+                    title: 'Download Excel',
+                    text: `Berikut adalah file ${fileName}`,
+                    url: savedFile.uri,
+                    dialogTitle: 'Simpan atau Bagikan Excel'
+                });
+            } catch (e) {
+                console.error('Error saving/sharing file', e);
+                alert('Gagal menyimpan file di HP. Pastikan izin penyimpanan aktif.');
+            }
+        } else {
+            // Web Download
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
     };
 
     const handleLogout = () => {
