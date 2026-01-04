@@ -27,7 +27,13 @@ export default function AdminLogin() {
         // Format: username 'kelasviiia' -> class 'VII A'
         // Password: 'guru'
         if (password === 'guru') {
-            const inputClass = username.toLowerCase().replace(/\s/g, '');
+            let inputClass = username.toLowerCase().replace(/\s/g, '');
+
+            // Map Arabic numerals to Roman numerals for class levels
+            inputClass = inputClass.replace('kelas7', 'kelasvii');
+            inputClass = inputClass.replace('kelas8', 'kelasviii');
+            inputClass = inputClass.replace('kelas9', 'kelasix');
+
             // Find matching class from constants
             const matchedClass = CLASSES.find(c =>
                 `kelas${c.toLowerCase().replace(/\s/g, '')}` === inputClass
