@@ -77,7 +77,7 @@ export default function AdminLogin() {
                         <input
                             type="text"
                             value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            onChange={(e) => setUsername(e.target.value.trim())}
                             className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all text-gray-900"
                             placeholder="Masukkan Username"
                             required
