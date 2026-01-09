@@ -407,7 +407,7 @@ async function main() {
                 data: {
                     name: name,
                     class: 'VII A',
-                    nis: `7A${Math.floor(Math.random() * 10000)}`
+                    nisn: `9K${Math.floor(Math.random() * 100000)}`
                 },
             })
         }
@@ -421,7 +421,7 @@ async function main() {
                 data: {
                     name: name,
                     class: 'IX A',
-                    nis: `9A${Math.floor(Math.random() * 10000)}`
+                    nisn: `9A${Math.floor(Math.random() * 10000)}`
                 },
             })
         }
@@ -435,7 +435,7 @@ async function main() {
                 data: {
                     name: name,
                     class: 'IX B',
-                    nis: `9B${Math.floor(Math.random() * 10000)}`
+                    nisn: `9B${Math.floor(Math.random() * 10000)}`
                 },
             })
         }
@@ -449,7 +449,7 @@ async function main() {
                 data: {
                     name: name,
                     class: 'IX C',
-                    nis: `9C${Math.floor(Math.random() * 10000)}`
+                    nisn: `9C${Math.floor(Math.random() * 10000)}`
                 },
             })
         }
@@ -463,7 +463,7 @@ async function main() {
                 data: {
                     name: name,
                     class: 'IX D',
-                    nis: `9D${Math.floor(Math.random() * 10000)}`
+                    nisn: `9D${Math.floor(Math.random() * 10000)}`
                 },
             })
         }
@@ -477,7 +477,7 @@ async function main() {
                 data: {
                     name: name,
                     class: 'IX E',
-                    nis: `9E${Math.floor(Math.random() * 10000)}`
+                    nisn: `9E${Math.floor(Math.random() * 10000)}`
                 },
             })
         }
@@ -491,7 +491,7 @@ async function main() {
                 data: {
                     name: name,
                     class: 'IX F',
-                    nis: `9F${Math.floor(Math.random() * 10000)}`
+                    nisn: `9F${Math.floor(Math.random() * 10000)}`
                 },
             })
         }
@@ -505,7 +505,7 @@ async function main() {
                 data: {
                     name: name,
                     class: 'IX G',
-                    nis: `9G${Math.floor(Math.random() * 10000)}`
+                    nisn: `9G${Math.floor(Math.random() * 10000)}`
                 },
             })
         }
@@ -519,7 +519,7 @@ async function main() {
                 data: {
                     name: name,
                     class: 'IX H',
-                    nis: `9H${Math.floor(Math.random() * 100000)}`
+                    nisn: `9H${Math.floor(Math.random() * 100000)}`
                 },
             })
         }
@@ -533,7 +533,7 @@ async function main() {
                 data: {
                     name: name,
                     class: 'IX I',
-                    nis: `9I${Math.floor(Math.random() * 100000)}`
+                    nisn: `9I${Math.floor(Math.random() * 100000)}`
                 },
             })
         }
@@ -547,7 +547,7 @@ async function main() {
                 data: {
                     name: name,
                     class: 'IX J',
-                    nis: `9J${Math.floor(Math.random() * 100000)}`
+                    nisn: `9J${Math.floor(Math.random() * 100000)}`
                 },
             })
         }
@@ -561,7 +561,7 @@ async function main() {
                 data: {
                     name: name,
                     class: 'IX K',
-                    nis: `9K${Math.floor(Math.random() * 100000)}`
+                    nisn: `9K${Math.floor(Math.random() * 100000)}`
                 },
             })
         }

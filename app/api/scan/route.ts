@@ -14,7 +14,7 @@ export async function POST(request: Request) {
             where: {
                 OR: [
                     { barcode: qrCode },
-                    { nis: qrCode }
+                    { nisn: qrCode }
                 ]
             }
         });

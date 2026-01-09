@@ -11,7 +11,7 @@ function StudentSelectionContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const className = searchParams.get('kelas');
-    const [students, setStudents] = useState<{ id: number; name: string; class: string; nis: string | null }[]>([]);
+    const [students, setStudents] = useState<{ id: number; name: string; class: string; nisn: string | null }[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
 
@@ -89,7 +89,7 @@ function StudentSelectionContent() {
                             </div>
                             <div>
                                 <p className="font-medium text-gray-800">{student.name}</p>
-                                <p className="text-xs text-gray-500">{student.nis || 'No NIS'}</p>
+                                <p className="text-xs text-gray-500">{student.nisn || 'No NISN'}</p>
                             </div>
                         </button>
                     ))}

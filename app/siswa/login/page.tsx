@@ -9,13 +9,13 @@ import { CLASSES } from '../../../lib/constants';
 
 export default function StudentLogin() {
     const router = useRouter();
-    const [nis, setNis] = useState('');
+    const [nisn, setNisn] = useState('');
     const [password, setPassword] = useState('');
 
     const handleLogin = (e: React.FormEvent) => {
         e.preventDefault();
 
-        let inputClass = nis.toLowerCase().replace(/\s/g, '');
+        let inputClass = nisn.toLowerCase().replace(/\s/g, '');
 
         // Map Arabic numerals to Roman numerals for class levels
         inputClass = inputClass.replace('kelas7', 'kelasvii');
@@ -52,8 +52,8 @@ export default function StudentLogin() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Username Kelas</label>
                         <input
                             type="text"
-                            value={nis}
-                            onChange={(e) => setNis(e.target.value)}
+                            value={nisn}
+                            onChange={(e) => setNisn(e.target.value)}
                             className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-gray-900"
                             placeholder="Masukkan username kelas"
                             required
