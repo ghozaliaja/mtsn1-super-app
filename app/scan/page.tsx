@@ -1,10 +1,9 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import { format } from 'date-fns';
-import { id } from 'date-fns/locale';
-import { Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Camera } from 'lucide-react';
 
 interface ScanResult {
     status: 'success' | 'error';
@@ -19,30 +18,40 @@ interface ScanResult {
 export default function ScanPage() {
     const [lastResult, setLastResult] = useState<ScanResult | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+    const [cameraError, setCameraError] = useState<string | null>(null);
+    const [isScannerReady, setIsScannerReady] = useState(false);
+
+    const scannerRef = useRef<Html5Qrcode | null>(null);
     const isProcessing = useRef(false);
 
     useEffect(() => {
-        // Initialize Scanner
-        const scanner = new Html5QrcodeScanner(
-            "reader",
-            {
-                fps: 10,
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0,
-                videoConstraints: {
-                    facingMode: "user"
-                }
-            },
-            /* verbose= */ false
-        );
+        const startScanner = async () => {
+            try {
+                const scanner = new Html5Qrcode("reader");
+                scannerRef.current = scanner;
 
-        scanner.render(onScanSuccess, onScanFailure);
-        scannerRef.current = scanner;
+                await scanner.start(
+                    { facingMode: "user" },
+                    {
+                        fps: 10,
+                        qrbox: { width: 250, height: 250 },
+                        aspectRatio: 1.0
+                    },
+                    onScanSuccess,
+                    onScanFailure
+                );
+                setIsScannerReady(true);
+            } catch (err) {
+                console.error("Error starting scanner", err);
+                setCameraError("Gagal mengakses kamera. Pastikan izin kamera diberikan.");
+            }
+        };
+
+        startScanner();
 
         return () => {
-            if (scannerRef.current) {
-                scannerRef.current.clear().catch(console.error);
+            if (scannerRef.current && scannerRef.current.isScanning) {
+                scannerRef.current.stop().catch(console.error);
             }
         };
     }, []);
@@ -69,7 +78,6 @@ export default function ScanPage() {
                     student: data.student,
                     time: format(new Date(), 'HH:mm:ss')
                 });
-                // Speak Greeting
                 speakGreeting(data.student.name);
             } else {
                 setLastResult({
@@ -94,18 +102,16 @@ export default function ScanPage() {
     };
 
     const onScanFailure = (error: any) => {
-        // handle scan failure
+        // ignore
     };
 
     const speakGreeting = (name: string) => {
         if ('speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(`Terima kasih, ${name}`);
-            utterance.lang = 'id-ID'; // Indonesian
-            utterance.rate = 0.9; // Slightly slower for clarity
-            utterance.pitch = 1;
+            utterance.lang = 'id-ID';
+            utterance.rate = 0.9;
             window.speechSynthesis.speak(utterance);
         } else {
-            // Fallback to beep if TTS not supported
             playSound('success');
         }
     };
@@ -125,8 +131,29 @@ export default function ScanPage() {
                 </div>
 
                 {/* Scanner Area */}
-                <div className="bg-white rounded-xl overflow-hidden shadow-2xl border-4 border-gray-700 relative">
-                    <div id="reader" className="w-full"></div>
+                <div className="bg-white rounded-xl overflow-hidden shadow-2xl border-4 border-gray-700 relative aspect-square bg-black">
+                    <div id="reader" className="w-full h-full"></div>
+
+                    {!isScannerReady && !cameraError && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500">
+                            <Camera className="w-12 h-12 mb-2 animate-pulse" />
+                            <p>Memuat Kamera...</p>
+                        </div>
+                    )}
+
+                    {cameraError && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-red-500 p-4 text-center">
+                            <XCircle className="w-12 h-12 mb-2" />
+                            <p>{cameraError}</p>
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg text-sm"
+                            >
+                                Coba Lagi
+                            </button>
+                        </div>
+                    )}
+
                     {isLoading && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
                             <Loader2 className="w-12 h-12 text-white animate-spin" />
@@ -137,8 +164,8 @@ export default function ScanPage() {
                 {/* Result Display */}
                 {lastResult && (
                     <div className={`p-6 rounded-xl border-l-4 shadow-lg transition-all transform duration-500 ${lastResult.status === 'success'
-                        ? 'bg-green-900/50 border-green-500'
-                        : 'bg-red-900/50 border-red-500'
+                            ? 'bg-green-900/50 border-green-500'
+                            : 'bg-red-900/50 border-red-500'
                         }`}>
                         <div className="flex items-start gap-4">
                             {lastResult.status === 'success' ? (
