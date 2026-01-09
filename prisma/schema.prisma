@@ -14,6 +14,11 @@ model Student {
   nis        String?      @unique
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
+  
+  // New fields for QR Attendance
+  barcode     String?      @unique
+  parentPhone String?
+
   attendance Attendance[]
 }
 
@@ -22,6 +27,10 @@ model Attendance {
   date      String // YYYY-MM-DD
   studentId Int
   student   Student  @relation(fields: [studentId], references: [id])
+
+  // School Attendance (QR)
+  timeIn    DateTime?
+  status    String?      // PRESENT, LATE, etc.
 
   // Prayer statuses
   subuh    Boolean @default(false)
