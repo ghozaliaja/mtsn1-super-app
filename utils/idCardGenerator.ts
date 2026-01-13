@@ -28,44 +28,65 @@ export const generateIDCard = async (student: Student, templateSrc: string): Pro
             // Draw Template
             ctx.drawImage(img, 0, 0);
 
+            // MASKING DUMMY TEXT (Hack: Cover existing text with a box)
+            // Adjust these coordinates to cover "NAMA : Ahmad Fulan" etc.
+            // Assuming the background is white/light in that area.
+            // We need to pick the color from the image or assume white.
+            // Let's assume the text area background is white/light gray.
+            ctx.fillStyle = '#ffffff'; // White mask
+            // Coordinates based on estimation from typical ID cards
+            // x: 380, y: 320, w: 600, h: 250
+            ctx.fillRect(380, 320, 600, 250);
+
             // Generate QR Code
             const qrData = student.nisn || 'INVALID';
-            const qrUrl = await QRCode.toDataURL(qrData, { margin: 1, width: 250 });
+            const qrUrl = await QRCode.toDataURL(qrData, { margin: 1, width: 200 }); // Smaller QR
             const qrImg = new Image();
             qrImg.src = qrUrl;
             await new Promise((r) => { qrImg.onload = r; });
 
-            // Draw QR Code (Adjust coordinates based on design)
-            // Assuming design: QR code is at the bottom center or specific box
-            // Let's approximate based on typical ID cards, user can adjust
-            // Based on previous artifacts, let's place it at:
-            // x: 730, y: 350 (Approximate for landscape ID card right side)
-            // Need to verify coordinates with user or trial/error. 
-            // For now, I'll put it in a reasonable spot.
-            // Looking at the artifact `id_card_front_updated...png` (I can't see it now but I recall it).
-            // Let's assume a standard position.
-
-            // COORD CONFIGURATION (To be tweaked)
-            const qrX = 80;
-            const qrY = 280;
-            const qrSize = 280;
-
+            // Draw QR Code
+            // Move it slightly left and down
+            const qrX = 60;
+            const qrY = 320;
+            const qrSize = 220;
             ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
             // Draw Text
-            ctx.font = 'bold 42px Arial';
-            ctx.fillStyle = '#000000';
             ctx.textAlign = 'left';
 
-            // Name
-            ctx.fillText(student.name.toUpperCase(), 400, 360);
+            // Name Label
+            ctx.font = 'bold 24px Arial';
+            ctx.fillStyle = '#1a4d2e'; // Dark Green (School Theme)
+            ctx.fillText('NAMA', 320, 360);
+            ctx.fillText(':', 420, 360);
 
-            // NISN
-            ctx.font = '36px Arial';
-            ctx.fillText(`NISN: ${student.nisn || '-'}`, 400, 430);
+            // Name Value
+            ctx.font = 'bold 32px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.fillText(student.name.toUpperCase(), 440, 360);
 
-            // Class
-            ctx.fillText(`Kelas: ${student.class}`, 400, 490);
+            // NISN Label
+            ctx.font = 'bold 24px Arial';
+            ctx.fillStyle = '#1a4d2e';
+            ctx.fillText('NISN', 320, 410);
+            ctx.fillText(':', 420, 410);
+
+            // NISN Value
+            ctx.font = '30px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.fillText(student.nisn || '-', 440, 410);
+
+            // Class Label
+            ctx.font = 'bold 24px Arial';
+            ctx.fillStyle = '#1a4d2e';
+            ctx.fillText('KELAS', 320, 460);
+            ctx.fillText(':', 420, 460);
+
+            // Class Value
+            ctx.font = '30px Arial';
+            ctx.fillStyle = '#000000';
+            ctx.fillText(student.class, 440, 460);
 
             resolve(canvas.toDataURL('image/png'));
         } catch (error) {

@@ -28,21 +28,10 @@ export default function AdminIDCardsPage() {
         async function fetchStudents() {
             setLoading(true);
             try {
-                // Reuse existing API or create a new one?
-                // We can use /api/attendance?class=... but it returns attendance records.
-                // Better to have a dedicated endpoint or just filter from a general student list.
-                // Let's try to use the existing /api/attendance endpoint for now as it returns student data.
-                // Or better, let's assume we might need a simple student list endpoint.
-                // Actually, let's use the same pattern as dashboard: fetch by class.
-                // Wait, /api/attendance requires a date.
-                // Let's check if we have a pure student endpoint.
-                // If not, I might need to create one or use a workaround.
-                // Workaround: Use /api/attendance with today's date.
                 const today = new Date().toISOString().split('T')[0];
                 const res = await fetch(`/api/attendance?class=${encodeURIComponent(selectedClass)}&date=${today}`);
                 if (res.ok) {
                     const data = await res.json();
-                    // Extract student objects from the response
                     const studentList = data.map((item: any) => item.student);
                     setStudents(studentList);
                 }
@@ -70,7 +59,6 @@ export default function AdminIDCardsPage() {
             for (const student of students) {
                 try {
                     const dataUrl = await generateIDCard(student, '/assets/idcard/front.png');
-                    // Remove data:image/png;base64, prefix
                     const base64Data = dataUrl.split(',')[1];
                     folder.file(`${student.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`, base64Data, { base64: true });
                 } catch (e) {
@@ -94,20 +82,20 @@ export default function AdminIDCardsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-8 font-sans">
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-800">Generate ID Cards</h1>
-                <p className="text-gray-500">Preview dan Download Kartu Identitas Siswa</p>
+        <div className="min-h-screen bg-slate-900 p-8 font-sans text-slate-100">
+            <header className="mb-8 border-b border-slate-800 pb-6">
+                <h1 className="text-3xl font-bold text-white tracking-tight">Generate ID Cards</h1>
+                <p className="text-slate-400 mt-2">Preview dan Download Kartu Identitas Siswa</p>
             </header>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8">
-                <div className="flex flex-col md:flex-row gap-4 items-end">
+            <div className="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-6 mb-8">
+                <div className="flex flex-col md:flex-row gap-6 items-end">
                     <div className="w-full md:w-1/3">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Pilih Kelas</label>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">Pilih Kelas</label>
                         <select
                             value={selectedClass}
                             onChange={(e) => setSelectedClass(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                            className="w-full p-3 bg-slate-900 border border-slate-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-white transition-all"
                         >
                             {CLASSES.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
@@ -117,9 +105,9 @@ export default function AdminIDCardsPage() {
                         <button
                             onClick={handleDownloadAll}
                             disabled={downloading || students.length === 0}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-all ${downloading
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                    : 'bg-green-600 text-white hover:bg-green-700 shadow-sm hover:shadow'
+                            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all shadow-lg ${downloading
+                                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                                    : 'bg-blue-600 text-white hover:bg-blue-500 hover:shadow-blue-500/20'
                                 }`}
                         >
                             {downloading ? (
@@ -140,29 +128,33 @@ export default function AdminIDCardsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Student List */}
-                <div className="lg:col-span-1 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div className="p-4 border-b border-gray-100 bg-gray-50">
-                        <h2 className="font-semibold text-gray-800">Daftar Siswa ({students.length})</h2>
+                <div className="lg:col-span-1 bg-slate-800 rounded-xl shadow-lg border border-slate-700 overflow-hidden flex flex-col h-[600px]">
+                    <div className="p-4 border-b border-slate-700 bg-slate-800/50 backdrop-blur">
+                        <h2 className="font-semibold text-white flex items-center gap-2">
+                            <Eye size={18} className="text-blue-400" />
+                            Daftar Siswa ({students.length})
+                        </h2>
                     </div>
-                    <div className="max-h-[600px] overflow-y-auto p-2">
+                    <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent">
                         {loading ? (
-                            <div className="p-8 text-center text-gray-400">Loading...</div>
-                        ) : (
-                            <div className="space-y-1">
-                                {students.map(student => (
-                                    <button
-                                        key={student.id}
-                                        onClick={() => setPreviewStudent(student)}
-                                        className={`w-full text-left p-3 rounded-lg flex items-center justify-between transition-colors ${previewStudent?.id === student.id
-                                                ? 'bg-blue-50 text-blue-700 border border-blue-100'
-                                                : 'hover:bg-gray-50 text-gray-700'
-                                            }`}
-                                    >
-                                        <span className="font-medium truncate">{student.name}</span>
-                                        <Eye size={16} className={previewStudent?.id === student.id ? 'text-blue-500' : 'text-gray-300'} />
-                                    </button>
-                                ))}
+                            <div className="p-8 text-center text-slate-500 flex flex-col items-center gap-2">
+                                <Loader2 size={24} className="animate-spin" />
+                                Loading...
                             </div>
+                        ) : (
+                            students.map(student => (
+                                <button
+                                    key={student.id}
+                                    onClick={() => setPreviewStudent(student)}
+                                    className={`w-full text-left p-3 rounded-lg flex items-center justify-between transition-all ${previewStudent?.id === student.id
+                                            ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
+                                            : 'hover:bg-slate-700/50 text-slate-300 hover:text-white'
+                                        }`}
+                                >
+                                    <span className="font-medium truncate text-sm">{student.name}</span>
+                                    {previewStudent?.id === student.id && <div className="w-2 h-2 rounded-full bg-blue-400"></div>}
+                                </button>
+                            ))
                         )}
                     </div>
                 </div>
@@ -170,15 +162,17 @@ export default function AdminIDCardsPage() {
                 {/* Preview Area */}
                 <div className="lg:col-span-2">
                     {previewStudent ? (
-                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-8">
-                            <h2 className="text-xl font-bold text-gray-800 mb-6 pb-4 border-b border-gray-100">
-                                Preview: {previewStudent.name}
+                        <div className="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-8 sticky top-8 flex flex-col items-center">
+                            <h2 className="text-xl font-bold text-white mb-6 pb-4 border-b border-slate-700 w-full text-center">
+                                Preview: <span className="text-blue-400">{previewStudent.name}</span>
                             </h2>
-                            <IDCardPreview student={previewStudent} />
+                            <div className="p-4 bg-slate-900 rounded-xl border border-slate-700 shadow-inner">
+                                <IDCardPreview student={previewStudent} />
+                            </div>
                         </div>
                     ) : (
-                        <div className="bg-gray-100 rounded-xl border-2 border-dashed border-gray-300 p-12 text-center h-full flex flex-col items-center justify-center text-gray-400">
-                            <Eye size={48} className="mb-4 opacity-50" />
+                        <div className="bg-slate-800/50 rounded-xl border-2 border-dashed border-slate-700 p-12 text-center h-full flex flex-col items-center justify-center text-slate-500">
+                            <Eye size={48} className="mb-4 opacity-30" />
                             <p className="text-lg font-medium">Pilih siswa untuk melihat preview ID Card</p>
                         </div>
                     )}
