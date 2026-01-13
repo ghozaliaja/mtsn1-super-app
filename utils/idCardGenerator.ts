@@ -33,45 +33,6 @@ export const generateIDCard = async (student: Student, templateSrc: string): Pro
 
             // Generate QR Code
             const qrData = student.nisn || 'INVALID';
-            const qrUrl = await QRCode.toDataURL(qrData, { margin: 1, width: 250 });
-            const qrImg = new Image();
-            qrImg.src = qrUrl;
-            await new Promise((r) => { qrImg.onload = r; });
-
-            // Draw QR Code
-            // Position: Left side, slightly below center
-            // Based on the clean template, there is a white space on the left/center.
-            // Let's position it to match the original design's placement.
-            // Original had QR on the left.
-            const qrX = 80;
-            const qrY = 320;
-            const qrSize = 240;
-            ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
-
-            // Draw Text
-            ctx.textAlign = 'left';
-
-            // Text Configuration
-            const textXLabel = 350;
-            const textXColon = 450;
-            const textXValue = 470;
-            const startY = 380;
-            const lineHeight = 50;
-
-            // Name Label
-            ctx.font = 'bold 24px Arial';
-            ctx.fillStyle = '#1a4d2e'; // Dark Green
-            ctx.fillText('NAMA', textXLabel, startY);
-            ctx.fillText(':', textXColon, startY);
-
-            // Name Value
-            ctx.font = 'bold 32px Arial';
-            ctx.fillStyle = '#000000';
-            ctx.fillText(student.name.toUpperCase(), textXValue, startY);
-
-            // NISN Label
-            ctx.font = 'bold 24px Arial';
-            ctx.fillStyle = '#1a4d2e';
             ctx.fillText('NISN', textXLabel, startY + lineHeight);
             ctx.fillText(':', textXColon, startY + lineHeight);
 
