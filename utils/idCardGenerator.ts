@@ -40,10 +40,9 @@ export const generateIDCard = async (student: Student, templateSrc: string): Pro
             const centerX = canvas.width / 2;
 
             // Text Configuration
-            // Start below the photo placeholder
-            // Assuming photo ends around Y=600 (based on visual estimation of previous attempts)
-            let currentY = 620;
-            const lineHeight = 50;
+            // Moved up to fit everything better
+            let currentY = 580;
+            const lineHeight = 45;
 
             // Name
             ctx.font = 'bold 28px Arial';
@@ -63,10 +62,10 @@ export const generateIDCard = async (student: Student, templateSrc: string): Pro
             ctx.fillText('KELAS : ' + student.class, centerX, currentY);
 
             // Draw QR Code
-            // Position: Centered at the bottom
-            const qrSize = 250;
+            // Position: Centered at the bottom, smaller size
+            const qrSize = 180; // Smaller size
             const qrX = (canvas.width - qrSize) / 2;
-            const qrY = currentY + 40; // Below the text
+            const qrY = currentY + 25; // Closer to text
 
             ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
