@@ -136,6 +136,8 @@ export async function GET(request: Request) {
                     tarawih: record.tarawih,
                     puasa: record.puasa,
                     alquran: record.alquran,
+                    timeIn: record.timeIn,
+                    status: record.status,
                 }))
             }));
 
@@ -170,6 +172,8 @@ export async function GET(request: Request) {
                         tarawih: record.tarawih || false,
                         puasa: record.puasa || false,
                         alquran: record.alquran || false,
+                        timeIn: record.timeIn || null,
+                        status: record.status || null,
                     }
                 };
             });

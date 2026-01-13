@@ -28,6 +28,8 @@ interface AttendanceRecord {
     tarawih?: boolean;
     puasa?: boolean;
     alquran?: boolean;
+    timeIn?: string;
+    status?: string;
 }
 
 export default function AdminDashboard() {
@@ -45,8 +47,9 @@ export default function AdminDashboard() {
     const [selectedStudentId, setSelectedStudentId] = useState<number>(0);
     const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
     const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
+    const [viewMode, setViewMode] = useState<'prayer' | 'school'>('prayer');
 
-    const [previewData, setPreviewData] = useState<{ student: Student, record: AttendanceRecord }[]>([]);
+    const [previewData, setPreviewData] = useState<{ student: Student, record: AttendanceRecord & { timeIn?: string, status?: string } }[]>([]);
     const [mounted, setMounted] = useState(false);
 
     // Auth State
@@ -137,7 +140,7 @@ export default function AdminDashboard() {
 
             if (exportPeriod === 'daily') {
                 // REPORT: Class - Daily
-                fileName = `Rekap_Kelas_${selectedClass}_${selectedDate}.xlsx`;
+                fileName = `Rekap_${viewMode === 'school' ? 'Absensi' : 'Ibadah'}_Kelas_${selectedClass}_${selectedDate}.xlsx`;
                 sheetName = `Harian ${selectedClass}`;
 
                 data = targetStudents.map((s, index) => {
@@ -145,27 +148,38 @@ export default function AdminDashboard() {
                     const studentData = previewData.find(p => p.student.id === s.id);
                     const record = studentData ? studentData.record : generateDummyAttendance(s.name, selectedDate);
 
-                    return {
-                        No: index + 1,
-                        Nama: s.name,
-                        Kelas: s.class,
-                        Tanggal: selectedDate,
-                        Subuh: record.subuh ? '✓' : '✗',
-                        Dhuha: record.dhuha ? '✓' : '✗',
-                        Dzuhur: record.dzuhur ? '✓' : '✗',
-                        Ashar: record.ashar ? '✓' : '✗',
-                        Maghrib: record.maghrib ? '✓' : '✗',
-                        Isya: record.isya ? '✓' : '✗',
-                        Tahajjud: record.tahajjud ? '✓' : '✗',
-                        Tarawih: record.tarawih ? '✓' : '✗',
-                        Puasa: record.puasa ? '✓' : '✗',
-                        Quran: record.alquran ? '✓' : '✗',
-                    };
+                    if (viewMode === 'school') {
+                        return {
+                            No: index + 1,
+                            Nama: s.name,
+                            Kelas: s.class,
+                            Tanggal: selectedDate,
+                            'Jam Masuk': record.timeIn ? format(new Date(record.timeIn), 'HH:mm') : '-',
+                            'Status': record.status || 'Belum Hadir'
+                        };
+                    } else {
+                        return {
+                            No: index + 1,
+                            Nama: s.name,
+                            Kelas: s.class,
+                            Tanggal: selectedDate,
+                            Subuh: record.subuh ? '✓' : '✗',
+                            Dhuha: record.dhuha ? '✓' : '✗',
+                            Dzuhur: record.dzuhur ? '✓' : '✗',
+                            Ashar: record.ashar ? '✓' : '✗',
+                            Maghrib: record.maghrib ? '✓' : '✗',
+                            Isya: record.isya ? '✓' : '✗',
+                            Tahajjud: record.tahajjud ? '✓' : '✗',
+                            Tarawih: record.tarawih ? '✓' : '✗',
+                            Puasa: record.puasa ? '✓' : '✗',
+                            Quran: record.alquran ? '✓' : '✗',
+                        };
+                    }
                 });
 
             } else {
                 // REPORT: Class - Monthly
-                fileName = `Rekap_Bulanan_Kelas_${selectedClass}_${selectedMonth}.xlsx`;
+                fileName = `Rekap_${viewMode === 'school' ? 'Absensi' : 'Ibadah'}_Bulanan_Kelas_${selectedClass}_${selectedMonth}.xlsx`;
                 sheetName = `Bulanan ${selectedClass}`;
 
                 // Fetch monthly data from API
@@ -173,37 +187,79 @@ export default function AdminDashboard() {
                 if (!res.ok) throw new Error('Failed to fetch monthly data');
                 const monthlyData = await res.json();
 
-                data = monthlyData.map((item: any, index: number) => {
-                    const s = item.student;
-                    const records = item.records || [];
+                if (viewMode === 'school') {
+                    // School Attendance Monthly Report
+                    // Columns: No, Nama, 1, 2, 3... (Dates)
+                    // Value: H (Hadir), T (Terlambat), A (Alpa)
 
-                    // Calculate stats
-                    let stats = { subuh: 0, dzuhur: 0, ashar: 0, maghrib: 0, isya: 0, puasa: 0, quran: 0 };
-                    records.forEach((r: any) => {
-                        if (r.subuh) stats.subuh++;
-                        if (r.dzuhur) stats.dzuhur++;
-                        if (r.ashar) stats.ashar++;
-                        if (r.maghrib) stats.maghrib++;
-                        if (r.isya) stats.isya++;
-                        if (r.puasa) stats.puasa++;
-                        if (r.alquran) stats.quran++;
+                    const daysInMonth = new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate();
+
+                    data = monthlyData.map((item: any, index: number) => {
+                        const s = item.student;
+                        const records = item.records || [];
+
+                        const row: any = {
+                            No: index + 1,
+                            Nama: s.name,
+                            Kelas: s.class,
+                        };
+
+                        let totalHadir = 0;
+                        let totalTerlambat = 0;
+
+                        for (let i = 1; i <= daysInMonth; i++) {
+                            const dayDate = `${selectedMonth}-${String(i).padStart(2, '0')}`;
+                            const record = records.find((r: any) => r.date === dayDate);
+
+                            let status = '-';
+                            if (record) {
+                                if (record.status === 'HADIR') { status = 'H'; totalHadir++; }
+                                else if (record.status === 'TERLAMBAT') { status = 'T'; totalTerlambat++; }
+                            }
+
+                            row[String(i)] = status;
+                        }
+
+                        row['Total Hadir'] = totalHadir;
+                        row['Total Terlambat'] = totalTerlambat;
+
+                        return row;
                     });
 
-                    return {
-                        No: index + 1,
-                        Nama: s.name,
-                        Kelas: s.class,
-                        Bulan: selectedMonth,
-                        'Total Subuh': stats.subuh,
-                        'Total Dzuhur': stats.dzuhur,
-                        'Total Ashar': stats.ashar,
-                        'Total Maghrib': stats.maghrib,
-                        'Total Isya': stats.isya,
-                        'Total Puasa': stats.puasa,
-                        'Total Quran': stats.quran,
-                        'Total Kehadiran': stats.subuh + stats.dzuhur + stats.ashar + stats.maghrib + stats.isya
-                    };
-                });
+                } else {
+                    // Prayer Attendance Monthly Report (Existing Logic)
+                    data = monthlyData.map((item: any, index: number) => {
+                        const s = item.student;
+                        const records = item.records || [];
+
+                        // Calculate stats
+                        let stats = { subuh: 0, dzuhur: 0, ashar: 0, maghrib: 0, isya: 0, puasa: 0, quran: 0 };
+                        records.forEach((r: any) => {
+                            if (r.subuh) stats.subuh++;
+                            if (r.dzuhur) stats.dzuhur++;
+                            if (r.ashar) stats.ashar++;
+                            if (r.maghrib) stats.maghrib++;
+                            if (r.isya) stats.isya++;
+                            if (r.puasa) stats.puasa++;
+                            if (r.alquran) stats.quran++;
+                        });
+
+                        return {
+                            No: index + 1,
+                            Nama: s.name,
+                            Kelas: s.class,
+                            Bulan: selectedMonth,
+                            'Total Subuh': stats.subuh,
+                            'Total Dzuhur': stats.dzuhur,
+                            'Total Ashar': stats.ashar,
+                            'Total Maghrib': stats.maghrib,
+                            'Total Isya': stats.isya,
+                            'Total Puasa': stats.puasa,
+                            'Total Quran': stats.quran,
+                            'Total Kehadiran': stats.subuh + stats.dzuhur + stats.ashar + stats.maghrib + stats.isya
+                        };
+                    });
+                }
             }
 
         } else {
@@ -309,20 +365,42 @@ export default function AdminDashboard() {
         }
 
         // Set Column Widths (Fit to Header Text - Optimized for A4)
-        const colWidths = [
-            { wch: 5 },  // Tgl
-            { wch: 5 },  // Sbh
-            { wch: 5 },  // Dha
-            { wch: 5 },  // Dzhr
-            { wch: 5 },  // Ashr
-            { wch: 6 },  // Magh
-            { wch: 5 },  // Isya
-            { wch: 6 },  // Tahaj
-            { wch: 6 },  // Tarw
-            { wch: 5 },  // Psa
-            { wch: 5 },  // Qrn
-            { wch: 5 },  // Ket
-        ];
+        let colWidths = [];
+        if (viewMode === 'school' && exportPeriod === 'monthly') {
+            colWidths = [
+                { wch: 5 },  // No
+                { wch: 30 }, // Nama
+                { wch: 10 }, // Kelas
+                // Days 1-31
+                ...Array(31).fill({ wch: 3 }),
+                { wch: 10 }, // Total Hadir
+                { wch: 10 }, // Total Terlambat
+            ];
+        } else if (viewMode === 'school') {
+            colWidths = [
+                { wch: 5 },  // No
+                { wch: 30 }, // Nama
+                { wch: 10 }, // Kelas
+                { wch: 15 }, // Tanggal
+                { wch: 15 }, // Jam Masuk
+                { wch: 15 }, // Status
+            ];
+        } else {
+            colWidths = [
+                { wch: 5 },  // Tgl
+                { wch: 5 },  // Sbh
+                { wch: 5 },  // Dha
+                { wch: 5 },  // Dzhr
+                { wch: 5 },  // Ashr
+                { wch: 6 },  // Magh
+                { wch: 5 },  // Isya
+                { wch: 6 },  // Tahaj
+                { wch: 6 },  // Tarw
+                { wch: 5 },  // Psa
+                { wch: 5 },  // Qrn
+                { wch: 5 },  // Ket
+            ];
+        }
         ws['!cols'] = colWidths;
 
         // Apply Styles (Border & Font 11) to Data Range
@@ -460,6 +538,24 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
+            {/* View Mode Toggle */}
+            <div className="flex justify-center mb-8">
+                <div className="bg-white p-1 rounded-xl shadow-sm border border-gray-200 inline-flex">
+                    <button
+                        onClick={() => setViewMode('prayer')}
+                        className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'prayer' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                        Absensi Sholat
+                    </button>
+                    <button
+                        onClick={() => setViewMode('school')}
+                        className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'school' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                        Absensi Sekolah (QR)
+                    </button>
+                </div>
+            </div>
+
             {/* Export Section */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
                 <div className="p-6 border-b border-gray-100">
@@ -584,16 +680,25 @@ export default function AdminDashboard() {
                             <tr>
                                 <th className="p-4 sticky left-0 bg-gray-100 z-10">Nama</th>
                                 <th className="p-4">Kelas</th>
-                                <th className="p-4 text-center">Tahajjud</th>
-                                <th className="p-4 text-center">Subuh</th>
-                                <th className="p-4 text-center">Dhuha</th>
-                                <th className="p-4 text-center">Dzuhur</th>
-                                <th className="p-4 text-center">Ashar</th>
-                                <th className="p-4 text-center">Maghrib</th>
-                                <th className="p-4 text-center">Isya</th>
-                                {isRamadan && <th className="p-4 text-center">Tarawih</th>}
-                                {isRamadan && <th className="p-4 text-center">Puasa</th>}
-                                <th className="p-4 text-center">Qur'an</th>
+                                {viewMode === 'prayer' ? (
+                                    <>
+                                        <th className="p-4 text-center">Tahajjud</th>
+                                        <th className="p-4 text-center">Subuh</th>
+                                        <th className="p-4 text-center">Dhuha</th>
+                                        <th className="p-4 text-center">Dzuhur</th>
+                                        <th className="p-4 text-center">Ashar</th>
+                                        <th className="p-4 text-center">Maghrib</th>
+                                        <th className="p-4 text-center">Isya</th>
+                                        {isRamadan && <th className="p-4 text-center">Tarawih</th>}
+                                        {isRamadan && <th className="p-4 text-center">Puasa</th>}
+                                        <th className="p-4 text-center">Qur'an</th>
+                                    </>
+                                ) : (
+                                    <>
+                                        <th className="p-4 text-center">Jam Masuk</th>
+                                        <th className="p-4 text-center">Status</th>
+                                    </>
+                                )}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -601,16 +706,31 @@ export default function AdminDashboard() {
                                 <tr key={student.id} className="hover:bg-blue-50 transition-colors">
                                     <td className="p-4 font-medium text-gray-900 sticky left-0 bg-white hover:bg-blue-50 transition-colors">{student.name}</td>
                                     <td className="p-4 text-gray-800">{student.class}</td>
-                                    <td className="p-4 text-center">{record.tahajjud ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                    <td className="p-4 text-center">{record.subuh ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                    <td className="p-4 text-center">{record.dhuha ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                    <td className="p-4 text-center">{record.dzuhur ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                    <td className="p-4 text-center">{record.ashar ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                    <td className="p-4 text-center">{record.maghrib ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                    <td className="p-4 text-center">{record.isya ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                    {isRamadan && <td className="p-4 text-center">{record.tarawih ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>}
-                                    {isRamadan && <td className="p-4 text-center">{record.puasa ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>}
-                                    <td className="p-4 text-center">{record.alquran ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                    {viewMode === 'prayer' ? (
+                                        <>
+                                            <td className="p-4 text-center">{record.tahajjud ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                            <td className="p-4 text-center">{record.subuh ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                            <td className="p-4 text-center">{record.dhuha ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                            <td className="p-4 text-center">{record.dzuhur ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                            <td className="p-4 text-center">{record.ashar ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                            <td className="p-4 text-center">{record.maghrib ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                            <td className="p-4 text-center">{record.isya ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                            {isRamadan && <td className="p-4 text-center">{record.tarawih ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>}
+                                            {isRamadan && <td className="p-4 text-center">{record.puasa ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>}
+                                            <td className="p-4 text-center">{record.alquran ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <td className="p-4 text-center font-mono">
+                                                {record.timeIn ? format(new Date(record.timeIn), 'HH:mm') : '-'}
+                                            </td>
+                                            <td className="p-4 text-center">
+                                                {record.status === 'HADIR' && <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">HADIR</span>}
+                                                {record.status === 'TERLAMBAT' && <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold">TERLAMBAT</span>}
+                                                {!record.status && <span className="text-gray-400 text-xs italic">Belum Hadir</span>}
+                                            </td>
+                                        </>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>
