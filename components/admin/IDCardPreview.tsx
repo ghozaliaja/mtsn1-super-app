@@ -24,8 +24,8 @@ export default function IDCardPreview({ student }: IDCardPreviewProps) {
         const generate = async () => {
             setLoading(true);
             try {
-                // Use the front template
-                const url = await generateIDCard(student, '/assets/idcard/front.png');
+                // Use the CLEAN template
+                const url = await generateIDCard(student, '/assets/idcard/front_clean.png');
                 if (active) setImageUrl(url);
             } catch (error) {
                 console.error('Failed to generate ID card', error);

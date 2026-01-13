@@ -58,7 +58,8 @@ export default function AdminIDCardsPage() {
 
             for (const student of students) {
                 try {
-                    const dataUrl = await generateIDCard(student, '/assets/idcard/front.png');
+                    // Use the CLEAN template
+                    const dataUrl = await generateIDCard(student, '/assets/idcard/front_clean.png');
                     const base64Data = dataUrl.split(',')[1];
                     folder.file(`${student.name.replace(/[^a-zA-Z0-9]/g, '_')}.png`, base64Data, { base64: true });
                 } catch (e) {

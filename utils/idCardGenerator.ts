@@ -14,7 +14,8 @@ export const generateIDCard = async (student: Student, templateSrc: string): Pro
             const ctx = canvas.getContext('2d');
             if (!ctx) throw new Error('Could not get canvas context');
 
-            // Load Template
+            // Load Template (Use the CLEAN template by default if passed, or we force it here if needed)
+            // But the component passes the path. We should ensure the component passes the clean one.
             const img = new Image();
             img.crossOrigin = 'anonymous';
             img.src = templateSrc;
@@ -28,65 +29,67 @@ export const generateIDCard = async (student: Student, templateSrc: string): Pro
             // Draw Template
             ctx.drawImage(img, 0, 0);
 
-            // MASKING DUMMY TEXT (Hack: Cover existing text with a box)
-            // Adjust these coordinates to cover "NAMA : Ahmad Fulan" etc.
-            // Assuming the background is white/light in that area.
-            // We need to pick the color from the image or assume white.
-            // Let's assume the text area background is white/light gray.
-            ctx.fillStyle = '#ffffff'; // White mask
-            // Coordinates based on estimation from typical ID cards
-            // x: 380, y: 320, w: 600, h: 250
-            ctx.fillRect(380, 320, 600, 250);
+            // NO MASKING NEEDED (We are using a clean template)
 
             // Generate QR Code
             const qrData = student.nisn || 'INVALID';
-            const qrUrl = await QRCode.toDataURL(qrData, { margin: 1, width: 200 }); // Smaller QR
+            const qrUrl = await QRCode.toDataURL(qrData, { margin: 1, width: 250 });
             const qrImg = new Image();
             qrImg.src = qrUrl;
             await new Promise((r) => { qrImg.onload = r; });
 
             // Draw QR Code
-            // Move it slightly left and down
-            const qrX = 60;
+            // Position: Left side, slightly below center
+            // Based on the clean template, there is a white space on the left/center.
+            // Let's position it to match the original design's placement.
+            // Original had QR on the left.
+            const qrX = 80;
             const qrY = 320;
-            const qrSize = 220;
+            const qrSize = 240;
             ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
 
             // Draw Text
             ctx.textAlign = 'left';
 
+            // Text Configuration
+            const textXLabel = 350;
+            const textXColon = 450;
+            const textXValue = 470;
+            const startY = 380;
+            const lineHeight = 50;
+
             // Name Label
             ctx.font = 'bold 24px Arial';
-            ctx.fillStyle = '#1a4d2e'; // Dark Green (School Theme)
-            ctx.fillText('NAMA', 320, 360);
-            ctx.fillText(':', 420, 360);
+            ctx.fillStyle = '#1a4d2e'; // Dark Green
+            ctx.fillText('NAMA', textXLabel, startY);
+            ctx.fillText(':', textXColon, startY);
 
             // Name Value
             ctx.font = 'bold 32px Arial';
             ctx.fillStyle = '#000000';
-            ctx.fillText(student.name.toUpperCase(), 440, 360);
+            ctx.fillText(student.name.toUpperCase(), textXValue, startY);
 
             // NISN Label
             ctx.font = 'bold 24px Arial';
             ctx.fillStyle = '#1a4d2e';
-            ctx.fillText('NISN', 320, 410);
-            ctx.fillText(':', 420, 410);
+            ctx.fillText('NISN', textXLabel, startY + lineHeight);
+            ctx.fillText(':', textXColon, startY + lineHeight);
 
             // NISN Value
             ctx.font = '30px Arial';
             ctx.fillStyle = '#000000';
-            ctx.fillText(student.nisn || '-', 440, 410);
+            ctx.fillText(student.nisn || '-', textXValue, startY + lineHeight);
 
             // Class Label
             ctx.font = 'bold 24px Arial';
             ctx.fillStyle = '#1a4d2e';
-            ctx.fillText('KELAS', 320, 460);
-            ctx.fillText(':', 420, 460);
+            ctx.fillText('KELAS', textXLabel, startY + (lineHeight * 2));
+            ctx.fillText(':', textXColon, startY + (lineHeight * 2));
 
             // Class Value
             ctx.font = '30px Arial';
             ctx.fillStyle = '#000000';
-            ctx.fillText(student.class, 440, 460);
+            ctx.fillText(student.class, textXValue, startY + (lineHeight * 2));
 
             resolve(canvas.toDataURL('image/png'));
         } catch (error) {
