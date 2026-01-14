@@ -274,12 +274,12 @@ export default function AdminDashboard() {
                 }
 
                 if (exportPeriod === 'daily') {
-                    fileName = `Laporan_Harian_${student.name.replace(/\s+/g, '_')}_${selectedDate}.xlsx`;
+                    fileName = `Laporan_${viewMode === 'school' ? 'Absensi' : 'Ibadah'}_Harian_${student.name.replace(/\s+/g, '_')}_${selectedDate}.xlsx`;
                     sheetName = 'Laporan Harian';
 
                     // Add Header Info
                     titleInfo = [
-                        ['Laporan Ibadah Harian Siswa MTsN 1 Labuhanbatu'],
+                        [`Laporan ${viewMode === 'school' ? 'Kehadiran' : 'Ibadah'} Harian Siswa MTsN 1 Labuhanbatu`],
                         [`Nama : ${student.name}`],
                         [`Kelas : ${student.class}`],
                         [''] // Spacer
@@ -289,23 +289,31 @@ export default function AdminDashboard() {
                     const studentData = previewData.find(p => p.student.id === student.id);
                     const record = studentData ? studentData.record : generateDummyAttendance(student.name, selectedDate);
 
-                    data = [{
-                        Tanggal: selectedDate,
-                        Subuh: record.subuh ? 'Hadir' : 'Tidak',
-                        Dhuha: record.dhuha ? 'Hadir' : 'Tidak',
-                        Dzuhur: record.dzuhur ? 'Hadir' : 'Tidak',
-                        Ashar: record.ashar ? 'Hadir' : 'Tidak',
-                        Maghrib: record.maghrib ? 'Hadir' : 'Tidak',
-                        Isya: record.isya ? 'Hadir' : 'Tidak',
-                        Tahajjud: record.tahajjud ? 'Hadir' : 'Tidak',
-                        Tarawih: record.tarawih ? 'Hadir' : 'Tidak',
-                        Puasa: record.puasa ? 'Ya' : 'Tidak',
-                        Quran: record.alquran ? 'Ya' : 'Tidak',
-                    }];
+                    if (viewMode === 'school') {
+                        data = [{
+                            Tanggal: selectedDate,
+                            'Jam Masuk': record.timeIn ? format(new Date(record.timeIn), 'HH:mm') : '-',
+                            'Status': record.status || 'Belum Hadir'
+                        }];
+                    } else {
+                        data = [{
+                            Tanggal: selectedDate,
+                            Subuh: record.subuh ? 'Hadir' : 'Tidak',
+                            Dhuha: record.dhuha ? 'Hadir' : 'Tidak',
+                            Dzuhur: record.dzuhur ? 'Hadir' : 'Tidak',
+                            Ashar: record.ashar ? 'Hadir' : 'Tidak',
+                            Maghrib: record.maghrib ? 'Hadir' : 'Tidak',
+                            Isya: record.isya ? 'Hadir' : 'Tidak',
+                            Tahajjud: record.tahajjud ? 'Hadir' : 'Tidak',
+                            Tarawih: record.tarawih ? 'Hadir' : 'Tidak',
+                            Puasa: record.puasa ? 'Ya' : 'Tidak',
+                            Quran: record.alquran ? 'Ya' : 'Tidak',
+                        }];
+                    }
 
                 } else {
                     // REPORT: Student - Monthly
-                    fileName = `Laporan_Bulanan_${student.name.replace(/\s+/g, '_')}_${selectedMonth}.xlsx`;
+                    fileName = `Laporan_${viewMode === 'school' ? 'Absensi' : 'Ibadah'}_Bulanan_${student.name.replace(/\s+/g, '_')}_${selectedMonth}.xlsx`;
                     sheetName = 'Laporan Bulanan';
 
                     // Format Month Year
@@ -319,7 +327,7 @@ export default function AdminDashboard() {
 
                     // Add Header Info
                     titleInfo = [
-                        ['Laporan Ibadah Bulanan Siswa MTsN 1 Labuhanbatu'],
+                        [`Laporan ${viewMode === 'school' ? 'Kehadiran' : 'Ibadah'} Bulanan Siswa MTsN 1 Labuhanbatu`],
                         [`Nama : ${student.name}`],
                         [`Kelas : ${student.class}`],
                         [`Bulan : ${formattedMonth}`],
@@ -338,20 +346,28 @@ export default function AdminDashboard() {
                         // Find record for this date
                         const record = records.find((r: any) => r.date === dayDate) || generateDummyAttendance(student.name, dayDate);
 
-                        data.push({
-                            Tgl: String(i).padStart(2, '0'),
-                            Sbh: record.subuh ? 'v' : '',
-                            Dha: record.dhuha ? 'v' : '',
-                            Dzhr: record.dzuhur ? 'v' : '',
-                            Ashr: record.ashar ? 'v' : '',
-                            Magh: record.maghrib ? 'v' : '',
-                            Isya: record.isya ? 'v' : '',
-                            Tahaj: record.tahajjud ? 'v' : '',
-                            Tarw: record.tarawih ? 'v' : '',
-                            Psa: record.puasa ? 'v' : '',
-                            Qrn: record.alquran ? 'v' : '',
-                            Ket: ''
-                        });
+                        if (viewMode === 'school') {
+                            data.push({
+                                Tanggal: String(i).padStart(2, '0'),
+                                'Jam Masuk': record.timeIn ? format(new Date(record.timeIn), 'HH:mm') : '-',
+                                'Status': record.status || '-'
+                            });
+                        } else {
+                            data.push({
+                                Tgl: String(i).padStart(2, '0'),
+                                Sbh: record.subuh ? 'v' : '',
+                                Dha: record.dhuha ? 'v' : '',
+                                Dzhr: record.dzuhur ? 'v' : '',
+                                Ashr: record.ashar ? 'v' : '',
+                                Magh: record.maghrib ? 'v' : '',
+                                Isya: record.isya ? 'v' : '',
+                                Tahaj: record.tahajjud ? 'v' : '',
+                                Tarw: record.tarawih ? 'v' : '',
+                                Psa: record.puasa ? 'v' : '',
+                                Qrn: record.alquran ? 'v' : '',
+                                Ket: ''
+                            });
+                        }
                     }
                 }
             }
