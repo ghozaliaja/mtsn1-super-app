@@ -41,7 +41,7 @@ export default function ScanPage() {
             scannerRef.current = html5QrCode;
 
             await html5QrCode.start(
-                { facingMode: "environment" },
+                { facingMode: "user" },
                 {
                     fps: 10,
                     qrbox: { width: 250, height: 250 }
