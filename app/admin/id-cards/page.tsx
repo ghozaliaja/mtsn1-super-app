@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { CLASSES } from '../../../lib/constants';
 import IDCardPreview from '../../../components/admin/IDCardPreview';
 import { generateIDCard } from '../../../utils/idCardGenerator';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import { Download, Eye, Loader2 } from 'lucide-react';
+import { Download, Eye, Loader2, ArrowLeft } from 'lucide-react';
 
 interface Student {
     id: number;
@@ -16,6 +17,7 @@ interface Student {
 }
 
 export default function AdminIDCardsPage() {
+    const router = useRouter();
     const [selectedClass, setSelectedClass] = useState(CLASSES[0]);
     const [students, setStudents] = useState<Student[]>([]);
     const [previewStudent, setPreviewStudent] = useState<Student | null>(null);
@@ -84,9 +86,17 @@ export default function AdminIDCardsPage() {
 
     return (
         <div className="min-h-screen bg-slate-900 p-8 font-sans text-slate-100">
-            <header className="mb-8 border-b border-slate-800 pb-6">
-                <h1 className="text-3xl font-bold text-white tracking-tight">Generate ID Cards</h1>
-                <p className="text-slate-400 mt-2">Preview dan Download Kartu Identitas Siswa</p>
+            <header className="mb-8 border-b border-slate-800 pb-6 flex items-start gap-4">
+                <button
+                    onClick={() => router.push('/admin/dashboard')}
+                    className="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors text-slate-400 hover:text-white"
+                >
+                    <ArrowLeft size={24} />
+                </button>
+                <div>
+                    <h1 className="text-3xl font-bold text-white tracking-tight">Generate ID Cards</h1>
+                    <p className="text-slate-400 mt-2">Preview dan Download Kartu Identitas Siswa</p>
+                </div>
             </header>
 
             <div className="bg-slate-800 rounded-xl shadow-lg border border-slate-700 p-6 mb-8">
@@ -107,8 +117,8 @@ export default function AdminIDCardsPage() {
                             onClick={handleDownloadAll}
                             disabled={downloading || students.length === 0}
                             className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all shadow-lg ${downloading
-                                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                                    : 'bg-blue-600 text-white hover:bg-blue-500 hover:shadow-blue-500/20'
+                                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                                : 'bg-blue-600 text-white hover:bg-blue-500 hover:shadow-blue-500/20'
                                 }`}
                         >
                             {downloading ? (
@@ -148,8 +158,8 @@ export default function AdminIDCardsPage() {
                                     key={student.id}
                                     onClick={() => setPreviewStudent(student)}
                                     className={`w-full text-left p-3 rounded-lg flex items-center justify-between transition-all ${previewStudent?.id === student.id
-                                            ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
-                                            : 'hover:bg-slate-700/50 text-slate-300 hover:text-white'
+                                        ? 'bg-blue-600/20 text-blue-300 border border-blue-500/30'
+                                        : 'hover:bg-slate-700/50 text-slate-300 hover:text-white'
                                         }`}
                                 >
                                     <span className="font-medium truncate text-sm">{student.name}</span>

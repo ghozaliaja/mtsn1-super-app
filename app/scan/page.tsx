@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Html5Qrcode } from 'html5-qrcode';
 import { format } from 'date-fns';
-import { Loader2, CheckCircle, XCircle, Camera } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Camera, ArrowLeft } from 'lucide-react';
 
 interface ScanResult {
     status: 'success' | 'error';
@@ -16,6 +17,7 @@ interface ScanResult {
 }
 
 export default function ScanPage() {
+    const router = useRouter();
     const [scanning, setScanning] = useState(false);
     const [result, setResult] = useState<ScanResult | null>(null);
     const [loading, setLoading] = useState(false);
@@ -123,7 +125,15 @@ export default function ScanPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white p-4 flex flex-col items-center justify-center">
+        <div className="min-h-screen bg-gray-900 text-white p-4 flex flex-col items-center justify-center relative">
+            <button
+                onClick={() => router.push('/admin/dashboard')}
+                className="absolute top-4 left-4 flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+            >
+                <ArrowLeft size={24} />
+                <span className="font-medium">Kembali</span>
+            </button>
+
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <h1 className="text-2xl font-bold mb-2">Scan QR Code</h1>
