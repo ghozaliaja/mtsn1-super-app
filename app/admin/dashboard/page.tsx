@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { usePrayerTimes } from '../../hooks/usePrayerTimes';
 
 import { useRouter } from 'next/navigation';
-import { Download, Users, FileSpreadsheet, Calendar, Filter, LogOut, Loader2 } from 'lucide-react';
+import { Download, Users, FileSpreadsheet, Calendar, Filter, LogOut, Loader2, QrCode, IdCard } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { CLASSES } from '../../../lib/constants';
@@ -528,13 +528,33 @@ export default function AdminDashboard() {
                     </h1>
                     <p className="text-gray-500">Absen Sholat MTsN 1 Labuhan Batu</p>
                 </div>
-                <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 transition-colors font-medium"
-                >
-                    <LogOut size={18} />
-                    Logout
-                </button>
+                <div className="flex gap-3">
+                    {userRole === 'admin' && (
+                        <>
+                            <button
+                                onClick={() => router.push('/scan')}
+                                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+                            >
+                                <QrCode size={18} />
+                                Scan QR
+                            </button>
+                            <button
+                                onClick={() => router.push('/admin/id-cards')}
+                                className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium shadow-sm"
+                            >
+                                <IdCard size={18} />
+                                ID Cards
+                            </button>
+                        </>
+                    )}
+                    <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-2 bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 transition-colors font-medium"
+                    >
+                        <LogOut size={18} />
+                        Logout
+                    </button>
+                </div>
             </header>
 
             {/* Stats Cards */}
