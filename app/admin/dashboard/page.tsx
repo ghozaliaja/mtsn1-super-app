@@ -8,6 +8,10 @@ import { Download, Users, FileSpreadsheet, Calendar, Filter, LogOut } from 'luci
 import { format } from 'date-fns';
 
 import { CLASSES } from '../../../lib/constants';
+import * as XLSX from 'xlsx-js-style';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 // Dummy Data Types
 interface Student {
@@ -123,12 +127,6 @@ export default function AdminDashboard() {
     };
 
     const handleExport = async () => {
-        // Dynamically import xlsx-js-style
-        const XLSX = require('xlsx-js-style');
-        const { Capacitor } = require('@capacitor/core');
-        const { Filesystem, Directory } = require('@capacitor/filesystem');
-        const { Share } = require('@capacitor/share');
-
         const wb = XLSX.utils.book_new();
         let data: any[] = [];
         let fileName = '';
