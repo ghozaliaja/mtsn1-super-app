@@ -23,63 +23,89 @@ export default function ScanPage() {
     const [loading, setLoading] = useState(false);
     const scannerRef = useRef<Html5Qrcode | null>(null);
 
+    // Cleanup on unmount
     useEffect(() => {
-        // Cleanup on unmount
         return () => {
             if (scannerRef.current) {
-                scannerRef.current.stop().catch(console.error);
+                try {
+                    scannerRef.current.stop().catch(err => console.warn("Cleanup stop error:", err));
+                } catch (e) {
+                    console.warn("Cleanup error:", e);
+                }
             }
         };
     }, []);
 
-    const startScanning = async () => {
-        setScanning(true);
-        setResult(null);
+    // Handle scanning state changes
+    useEffect(() => {
+        let active = true;
 
-        try {
-            const html5QrCode = new Html5Qrcode("reader");
-            scannerRef.current = html5QrCode;
+        const initScanner = async () => {
+            if (scanning && !scannerRef.current) {
+                try {
+                    // Small delay to ensure DOM is ready and visible
+                    await new Promise(r => setTimeout(r, 100));
 
-            await html5QrCode.start(
-                { facingMode: "user" },
-                {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 }
-                },
-                async (decodedText) => {
-                    // Success callback
-                    await handleScan(decodedText);
-                },
-                (errorMessage) => {
-                    // Error callback (ignore for now as it triggers on every frame without QR)
+                    if (!active) return;
+
+                    const html5QrCode = new Html5Qrcode("reader");
+                    scannerRef.current = html5QrCode;
+
+                    await html5QrCode.start(
+                        { facingMode: "user" },
+                        {
+                            fps: 10,
+                            qrbox: { width: 250, height: 250 }
+                        },
+                        async (decodedText) => {
+                            if (active) await handleScan(decodedText);
+                        },
+                        (errorMessage) => {
+                            // Ignore frame errors
+                        }
+                    );
+                } catch (err) {
+                    console.error("Error starting scanner", err);
+                    if (active) {
+                        setScanning(false);
+                        setResult({
+                            status: 'error',
+                            message: 'Gagal membuka kamera. Pastikan izin kamera diberikan.'
+                        });
+                    }
                 }
-            );
-        } catch (err) {
-            console.error("Error starting scanner", err);
-            setScanning(false);
-            setResult({
-                status: 'error',
-                message: 'Gagal membuka kamera. Pastikan izin kamera diberikan.'
-            });
-        }
-    };
-
-    const stopScanning = async () => {
-        if (scannerRef.current) {
-            try {
-                await scannerRef.current.stop();
-                setScanning(false);
-            } catch (err) {
-                console.error("Error stopping scanner", err);
             }
+        };
+
+        if (scanning) {
+            initScanner();
+        } else {
+            // Stop scanner if scanning becomes false
+            const stop = async () => {
+                if (scannerRef.current) {
+                    try {
+                        await scannerRef.current.stop();
+                    } catch (e) {
+                        console.warn("Stop error:", e);
+                    } finally {
+                        if (active) {
+                            scannerRef.current = null;
+                        }
+                    }
+                }
+            };
+            stop();
         }
-    };
+
+        return () => {
+            active = false;
+        };
+    }, [scanning]);
 
     const handleScan = async (qrCode: string) => {
         if (loading) return;
 
-        // Stop scanning temporarily
-        await stopScanning();
+        setScanning(false); // This will trigger the effect to stop the scanner
         setLoading(true);
 
         try {
@@ -91,7 +117,7 @@ export default function ScanPage() {
 
             const data = await res.json();
 
-            if (res.ok || res.status === 200) { // API returns 200 even for "Already scanned"
+            if (res.ok || res.status === 200) {
                 setResult({
                     status: 'success',
                     message: data.message || 'Berhasil Absen!',
@@ -99,8 +125,7 @@ export default function ScanPage() {
                     time: format(new Date(), 'HH:mm')
                 });
 
-                // Play success sound
-                const audio = new Audio('/success.mp3'); // Assuming file exists, or just ignore
+                const audio = new Audio('/success.mp3');
                 audio.play().catch(() => { });
 
             } else {
@@ -119,16 +144,21 @@ export default function ScanPage() {
         }
     };
 
+    const startScanning = () => {
+        setResult(null);
+        setScanning(true);
+    };
+
     const resetScan = () => {
         setResult(null);
-        startScanning();
+        setScanning(true);
     };
 
     return (
         <div className="min-h-screen bg-gray-900 text-white p-4 flex flex-col items-center justify-center relative">
             <button
                 onClick={() => router.push('/admin/dashboard')}
-                className="absolute top-4 left-4 flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+                className="absolute top-4 left-4 flex items-center gap-2 text-gray-400 hover:text-white transition-colors z-20"
             >
                 <ArrowLeft size={24} />
                 <span className="font-medium">Kembali</span>
@@ -141,10 +171,8 @@ export default function ScanPage() {
                 </div>
 
                 <div className="bg-white rounded-2xl overflow-hidden shadow-xl relative min-h-[300px] flex flex-col items-center justify-center mb-6">
-                    {/* Scanner Area */}
-                    {!result && (
-                        <div id="reader" className={`w-full ${!scanning ? 'hidden' : ''}`}></div>
-                    )}
+                    {/* Scanner Area - Always render but hide if not scanning */}
+                    <div id="reader" className={`w-full ${scanning ? '' : 'hidden'}`}></div>
 
                     {/* Initial State */}
                     {!scanning && !result && !loading && (
