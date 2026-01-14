@@ -4,14 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { usePrayerTimes } from '../../hooks/usePrayerTimes';
 
 import { useRouter } from 'next/navigation';
-import { Download, Users, FileSpreadsheet, Calendar, Filter, LogOut } from 'lucide-react';
+import { Download, Users, FileSpreadsheet, Calendar, Filter, LogOut, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { CLASSES } from '../../../lib/constants';
-import * as XLSX from 'xlsx-js-style';
-import { Capacitor } from '@capacitor/core';
-import { Filesystem, Directory } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share';
 
 // Dummy Data Types
 interface Student {
@@ -126,358 +122,376 @@ export default function AdminDashboard() {
         };
     };
 
+    // State for export loading
+    const [isExporting, setIsExporting] = useState(false);
+
     const handleExport = async () => {
-        const wb = XLSX.utils.book_new();
-        let data: any[] = [];
-        let fileName = '';
-        let sheetName = '';
-        let titleInfo: any[][] = [];
+        setIsExporting(true);
+        try {
+            // Dynamically import libraries to avoid SSR/Build issues
+            const XLSX = (await import('xlsx-js-style')).default || (await import('xlsx-js-style'));
+            const { Capacitor } = await import('@capacitor/core');
+            const { Filesystem, Directory } = await import('@capacitor/filesystem');
+            const { Share } = await import('@capacitor/share');
 
-        if (exportScope === 'class') {
-            const targetStudents = students.filter(s => s.class === selectedClass);
+            const wb = XLSX.utils.book_new();
+            let data: any[] = [];
+            let fileName = '';
+            let sheetName = '';
+            let titleInfo: any[][] = [];
 
-            if (exportPeriod === 'daily') {
-                // REPORT: Class - Daily
-                fileName = `Rekap_${viewMode === 'school' ? 'Absensi' : 'Ibadah'}_Kelas_${selectedClass}_${selectedDate}.xlsx`;
-                sheetName = `Harian ${selectedClass}`;
+            if (exportScope === 'class') {
+                const targetStudents = students.filter(s => s.class === selectedClass);
 
-                data = targetStudents.map((s, index) => {
-                    // Find record from previewData
-                    const studentData = previewData.find(p => p.student.id === s.id);
-                    const record = studentData ? studentData.record : generateDummyAttendance(s.name, selectedDate);
+                if (exportPeriod === 'daily') {
+                    // REPORT: Class - Daily
+                    fileName = `Rekap_${viewMode === 'school' ? 'Absensi' : 'Ibadah'}_Kelas_${selectedClass}_${selectedDate}.xlsx`;
+                    sheetName = `Harian ${selectedClass}`;
 
-                    if (viewMode === 'school') {
-                        return {
-                            No: index + 1,
-                            Nama: s.name,
-                            Kelas: s.class,
-                            Tanggal: selectedDate,
-                            'Jam Masuk': record.timeIn ? format(new Date(record.timeIn), 'HH:mm') : '-',
-                            'Status': record.status || 'Belum Hadir'
-                        };
-                    } else {
-                        return {
-                            No: index + 1,
-                            Nama: s.name,
-                            Kelas: s.class,
-                            Tanggal: selectedDate,
-                            Subuh: record.subuh ? '✓' : '✗',
-                            Dhuha: record.dhuha ? '✓' : '✗',
-                            Dzuhur: record.dzuhur ? '✓' : '✗',
-                            Ashar: record.ashar ? '✓' : '✗',
-                            Maghrib: record.maghrib ? '✓' : '✗',
-                            Isya: record.isya ? '✓' : '✗',
-                            Tahajjud: record.tahajjud ? '✓' : '✗',
-                            Tarawih: record.tarawih ? '✓' : '✗',
-                            Puasa: record.puasa ? '✓' : '✗',
-                            Quran: record.alquran ? '✓' : '✗',
-                        };
-                    }
-                });
+                    data = targetStudents.map((s, index) => {
+                        // Find record from previewData
+                        const studentData = previewData.find(p => p.student.id === s.id);
+                        const record = studentData ? studentData.record : generateDummyAttendance(s.name, selectedDate);
 
-            } else {
-                // REPORT: Class - Monthly
-                fileName = `Rekap_${viewMode === 'school' ? 'Absensi' : 'Ibadah'}_Bulanan_Kelas_${selectedClass}_${selectedMonth}.xlsx`;
-                sheetName = `Bulanan ${selectedClass}`;
-
-                // Fetch monthly data from API
-                const res = await fetch(`/api/attendance?class=${encodeURIComponent(selectedClass)}&month=${selectedMonth}`);
-                if (!res.ok) throw new Error('Failed to fetch monthly data');
-                const monthlyData = await res.json();
-
-                if (viewMode === 'school') {
-                    // School Attendance Monthly Report
-                    // Columns: No, Nama, 1, 2, 3... (Dates)
-                    // Value: H (Hadir), T (Terlambat), A (Alpa)
-
-                    const daysInMonth = new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate();
-
-                    data = monthlyData.map((item: any, index: number) => {
-                        const s = item.student;
-                        const records = item.records || [];
-
-                        const row: any = {
-                            No: index + 1,
-                            Nama: s.name,
-                            Kelas: s.class,
-                        };
-
-                        let totalHadir = 0;
-                        let totalTerlambat = 0;
-
-                        for (let i = 1; i <= daysInMonth; i++) {
-                            const dayDate = `${selectedMonth}-${String(i).padStart(2, '0')}`;
-                            const record = records.find((r: any) => r.date === dayDate);
-
-                            let status = '-';
-                            if (record) {
-                                if (record.status === 'HADIR') { status = 'H'; totalHadir++; }
-                                else if (record.status === 'TERLAMBAT') { status = 'T'; totalTerlambat++; }
-                            }
-
-                            row[String(i)] = status;
+                        if (viewMode === 'school') {
+                            return {
+                                No: index + 1,
+                                Nama: s.name,
+                                Kelas: s.class,
+                                Tanggal: selectedDate,
+                                'Jam Masuk': record.timeIn ? format(new Date(record.timeIn), 'HH:mm') : '-',
+                                'Status': record.status || 'Belum Hadir'
+                            };
+                        } else {
+                            return {
+                                No: index + 1,
+                                Nama: s.name,
+                                Kelas: s.class,
+                                Tanggal: selectedDate,
+                                Subuh: record.subuh ? '✓' : '✗',
+                                Dhuha: record.dhuha ? '✓' : '✗',
+                                Dzuhur: record.dzuhur ? '✓' : '✗',
+                                Ashar: record.ashar ? '✓' : '✗',
+                                Maghrib: record.maghrib ? '✓' : '✗',
+                                Isya: record.isya ? '✓' : '✗',
+                                Tahajjud: record.tahajjud ? '✓' : '✗',
+                                Tarawih: record.tarawih ? '✓' : '✗',
+                                Puasa: record.puasa ? '✓' : '✗',
+                                Quran: record.alquran ? '✓' : '✗',
+                            };
                         }
-
-                        row['Total Hadir'] = totalHadir;
-                        row['Total Terlambat'] = totalTerlambat;
-
-                        return row;
                     });
 
                 } else {
-                    // Prayer Attendance Monthly Report (Existing Logic)
-                    data = monthlyData.map((item: any, index: number) => {
-                        const s = item.student;
-                        const records = item.records || [];
+                    // REPORT: Class - Monthly
+                    fileName = `Rekap_${viewMode === 'school' ? 'Absensi' : 'Ibadah'}_Bulanan_Kelas_${selectedClass}_${selectedMonth}.xlsx`;
+                    sheetName = `Bulanan ${selectedClass}`;
 
-                        // Calculate stats
-                        let stats = { subuh: 0, dzuhur: 0, ashar: 0, maghrib: 0, isya: 0, puasa: 0, quran: 0 };
-                        records.forEach((r: any) => {
-                            if (r.subuh) stats.subuh++;
-                            if (r.dzuhur) stats.dzuhur++;
-                            if (r.ashar) stats.ashar++;
-                            if (r.maghrib) stats.maghrib++;
-                            if (r.isya) stats.isya++;
-                            if (r.puasa) stats.puasa++;
-                            if (r.alquran) stats.quran++;
+                    // Fetch monthly data from API
+                    const res = await fetch(`/api/attendance?class=${encodeURIComponent(selectedClass)}&month=${selectedMonth}`);
+                    if (!res.ok) throw new Error('Failed to fetch monthly data');
+                    const monthlyData = await res.json();
+
+                    if (viewMode === 'school') {
+                        // School Attendance Monthly Report
+                        const daysInMonth = new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate();
+
+                        data = monthlyData.map((item: any, index: number) => {
+                            const s = item.student;
+                            const records = item.records || [];
+
+                            const row: any = {
+                                No: index + 1,
+                                Nama: s.name,
+                                Kelas: s.class,
+                            };
+
+                            let totalHadir = 0;
+                            let totalTerlambat = 0;
+
+                            for (let i = 1; i <= daysInMonth; i++) {
+                                const dayDate = `${selectedMonth}-${String(i).padStart(2, '0')}`;
+                                const record = records.find((r: any) => r.date === dayDate);
+
+                                let status = '-';
+                                if (record) {
+                                    if (record.status === 'HADIR') { status = 'H'; totalHadir++; }
+                                    else if (record.status === 'TERLAMBAT') { status = 'T'; totalTerlambat++; }
+                                }
+
+                                row[String(i)] = status;
+                            }
+
+                            row['Total Hadir'] = totalHadir;
+                            row['Total Terlambat'] = totalTerlambat;
+
+                            return row;
                         });
 
-                        return {
-                            No: index + 1,
-                            Nama: s.name,
-                            Kelas: s.class,
-                            Bulan: selectedMonth,
-                            'Total Subuh': stats.subuh,
-                            'Total Dzuhur': stats.dzuhur,
-                            'Total Ashar': stats.ashar,
-                            'Total Maghrib': stats.maghrib,
-                            'Total Isya': stats.isya,
-                            'Total Puasa': stats.puasa,
-                            'Total Quran': stats.quran,
-                            'Total Kehadiran': stats.subuh + stats.dzuhur + stats.ashar + stats.maghrib + stats.isya
-                        };
-                    });
+                    } else {
+                        // Prayer Attendance Monthly Report
+                        data = monthlyData.map((item: any, index: number) => {
+                            const s = item.student;
+                            const records = item.records || [];
+
+                            // Calculate stats
+                            let stats = { subuh: 0, dzuhur: 0, ashar: 0, maghrib: 0, isya: 0, puasa: 0, quran: 0 };
+                            records.forEach((r: any) => {
+                                if (r.subuh) stats.subuh++;
+                                if (r.dzuhur) stats.dzuhur++;
+                                if (r.ashar) stats.ashar++;
+                                if (r.maghrib) stats.maghrib++;
+                                if (r.isya) stats.isya++;
+                                if (r.puasa) stats.puasa++;
+                                if (r.alquran) stats.quran++;
+                            });
+
+                            return {
+                                No: index + 1,
+                                Nama: s.name,
+                                Kelas: s.class,
+                                Bulan: selectedMonth,
+                                'Total Subuh': stats.subuh,
+                                'Total Dzuhur': stats.dzuhur,
+                                'Total Ashar': stats.ashar,
+                                'Total Maghrib': stats.maghrib,
+                                'Total Isya': stats.isya,
+                                'Total Puasa': stats.puasa,
+                                'Total Quran': stats.quran,
+                                'Total Kehadiran': stats.subuh + stats.dzuhur + stats.ashar + stats.maghrib + stats.isya
+                            };
+                        });
+                    }
                 }
-            }
-
-        } else {
-            // SCOPE: Student
-            const student = students.find(s => s.id === Number(selectedStudentId));
-            if (!student) return;
-
-            if (exportPeriod === 'daily') {
-                fileName = `Laporan_Harian_${student.name.replace(/\s+/g, '_')}_${selectedDate}.xlsx`;
-                sheetName = 'Laporan Harian';
-
-                // Add Header Info
-                titleInfo = [
-                    ['Laporan Ibadah Harian Siswa MTsN 1 Labuhanbatu'],
-                    [`Nama : ${student.name}`],
-                    [`Kelas : ${student.class}`],
-                    [''] // Spacer
-                ];
-
-                // Find record from previewData
-                const studentData = previewData.find(p => p.student.id === student.id);
-                const record = studentData ? studentData.record : generateDummyAttendance(student.name, selectedDate);
-
-                data = [{
-                    Tanggal: selectedDate,
-                    Subuh: record.subuh ? 'Hadir' : 'Tidak',
-                    Dhuha: record.dhuha ? 'Hadir' : 'Tidak',
-                    Dzuhur: record.dzuhur ? 'Hadir' : 'Tidak',
-                    Ashar: record.ashar ? 'Hadir' : 'Tidak',
-                    Maghrib: record.maghrib ? 'Hadir' : 'Tidak',
-                    Isya: record.isya ? 'Hadir' : 'Tidak',
-                    Tahajjud: record.tahajjud ? 'Hadir' : 'Tidak',
-                    Tarawih: record.tarawih ? 'Hadir' : 'Tidak',
-                    Puasa: record.puasa ? 'Ya' : 'Tidak',
-                    Quran: record.alquran ? 'Ya' : 'Tidak',
-                }];
 
             } else {
-                // REPORT: Student - Monthly
-                fileName = `Laporan_Bulanan_${student.name.replace(/\s+/g, '_')}_${selectedMonth}.xlsx`;
-                sheetName = 'Laporan Bulanan';
+                // SCOPE: Student
+                const student = students.find(s => s.id === Number(selectedStudentId));
+                if (!student) {
+                    alert('Silakan pilih siswa terlebih dahulu');
+                    setIsExporting(false);
+                    return;
+                }
 
-                // Format Month Year
-                const [year, month] = selectedMonth.split('-');
-                const monthNames = [
-                    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                if (exportPeriod === 'daily') {
+                    fileName = `Laporan_Harian_${student.name.replace(/\s+/g, '_')}_${selectedDate}.xlsx`;
+                    sheetName = 'Laporan Harian';
+
+                    // Add Header Info
+                    titleInfo = [
+                        ['Laporan Ibadah Harian Siswa MTsN 1 Labuhanbatu'],
+                        [`Nama : ${student.name}`],
+                        [`Kelas : ${student.class}`],
+                        [''] // Spacer
+                    ];
+
+                    // Find record from previewData
+                    const studentData = previewData.find(p => p.student.id === student.id);
+                    const record = studentData ? studentData.record : generateDummyAttendance(student.name, selectedDate);
+
+                    data = [{
+                        Tanggal: selectedDate,
+                        Subuh: record.subuh ? 'Hadir' : 'Tidak',
+                        Dhuha: record.dhuha ? 'Hadir' : 'Tidak',
+                        Dzuhur: record.dzuhur ? 'Hadir' : 'Tidak',
+                        Ashar: record.ashar ? 'Hadir' : 'Tidak',
+                        Maghrib: record.maghrib ? 'Hadir' : 'Tidak',
+                        Isya: record.isya ? 'Hadir' : 'Tidak',
+                        Tahajjud: record.tahajjud ? 'Hadir' : 'Tidak',
+                        Tarawih: record.tarawih ? 'Hadir' : 'Tidak',
+                        Puasa: record.puasa ? 'Ya' : 'Tidak',
+                        Quran: record.alquran ? 'Ya' : 'Tidak',
+                    }];
+
+                } else {
+                    // REPORT: Student - Monthly
+                    fileName = `Laporan_Bulanan_${student.name.replace(/\s+/g, '_')}_${selectedMonth}.xlsx`;
+                    sheetName = 'Laporan Bulanan';
+
+                    // Format Month Year
+                    const [year, month] = selectedMonth.split('-');
+                    const monthNames = [
+                        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                    ];
+                    const monthName = monthNames[parseInt(month) - 1];
+                    const formattedMonth = `${monthName} ${year}`;
+
+                    // Add Header Info
+                    titleInfo = [
+                        ['Laporan Ibadah Bulanan Siswa MTsN 1 Labuhanbatu'],
+                        [`Nama : ${student.name}`],
+                        [`Kelas : ${student.class}`],
+                        [`Bulan : ${formattedMonth}`],
+                        [''] // Spacer
+                    ];
+
+                    // Fetch monthly data for student
+                    const res = await fetch(`/api/attendance?studentId=${student.id}&month=${selectedMonth}`);
+                    if (!res.ok) throw new Error('Failed to fetch monthly data');
+                    const records = await res.json();
+
+                    const daysInMonth = new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate();
+
+                    for (let i = 1; i <= daysInMonth; i++) {
+                        const dayDate = `${selectedMonth}-${String(i).padStart(2, '0')}`;
+                        // Find record for this date
+                        const record = records.find((r: any) => r.date === dayDate) || generateDummyAttendance(student.name, dayDate);
+
+                        data.push({
+                            Tgl: String(i).padStart(2, '0'),
+                            Sbh: record.subuh ? 'v' : '',
+                            Dha: record.dhuha ? 'v' : '',
+                            Dzhr: record.dzuhur ? 'v' : '',
+                            Ashr: record.ashar ? 'v' : '',
+                            Magh: record.maghrib ? 'v' : '',
+                            Isya: record.isya ? 'v' : '',
+                            Tahaj: record.tahajjud ? 'v' : '',
+                            Tarw: record.tarawih ? 'v' : '',
+                            Psa: record.puasa ? 'v' : '',
+                            Qrn: record.alquran ? 'v' : '',
+                            Ket: ''
+                        });
+                    }
+                }
+            }
+
+            // Determine start row for data (A1 is 0)
+            const origin = titleInfo.length > 0 ? `A${titleInfo.length + 1}` : 'A1';
+            const ws = XLSX.utils.json_to_sheet(data, { origin });
+
+            // Add Titles if any
+            if (titleInfo.length > 0) {
+                XLSX.utils.sheet_add_aoa(ws, titleInfo, { origin: 'A1' });
+                // Style Title
+                if (ws['A1']) ws['A1'].s = { font: { bold: true, sz: 14 } };
+                if (ws['A2']) ws['A2'].s = { font: { bold: true, sz: 11 } };
+                if (ws['A3']) ws['A3'].s = { font: { bold: true, sz: 11 } };
+                if (ws['A4']) ws['A4'].s = { font: { bold: true, sz: 11 } };
+            }
+
+            // Set Column Widths (Fit to Header Text - Optimized for A4)
+            let colWidths = [];
+            if (viewMode === 'school' && exportPeriod === 'monthly') {
+                colWidths = [
+                    { wch: 5 },  // No
+                    { wch: 30 }, // Nama
+                    { wch: 10 }, // Kelas
+                    // Days 1-31
+                    ...Array(31).fill({ wch: 3 }),
+                    { wch: 10 }, // Total Hadir
+                    { wch: 10 }, // Total Terlambat
                 ];
-                const monthName = monthNames[parseInt(month) - 1];
-                const formattedMonth = `${monthName} ${year}`;
-
-                // Add Header Info
-                titleInfo = [
-                    ['Laporan Ibadah Bulanan Siswa MTsN 1 Labuhanbatu'],
-                    [`Nama : ${student.name}`],
-                    [`Kelas : ${student.class}`],
-                    [`Bulan : ${formattedMonth}`],
-                    [''] // Spacer
+            } else if (viewMode === 'school') {
+                colWidths = [
+                    { wch: 5 },  // No
+                    { wch: 30 }, // Nama
+                    { wch: 10 }, // Kelas
+                    { wch: 15 }, // Tanggal
+                    { wch: 15 }, // Jam Masuk
+                    { wch: 15 }, // Status
                 ];
+            } else {
+                colWidths = [
+                    { wch: 5 },  // Tgl
+                    { wch: 5 },  // Sbh
+                    { wch: 5 },  // Dha
+                    { wch: 5 },  // Dzhr
+                    { wch: 5 },  // Ashr
+                    { wch: 6 },  // Magh
+                    { wch: 5 },  // Isya
+                    { wch: 6 },  // Tahaj
+                    { wch: 6 },  // Tarw
+                    { wch: 5 },  // Psa
+                    { wch: 5 },  // Qrn
+                    { wch: 5 },  // Ket
+                ];
+            }
+            ws['!cols'] = colWidths;
 
-                // Fetch monthly data for student
-                const res = await fetch(`/api/attendance?studentId=${student.id}&month=${selectedMonth}`);
-                if (!res.ok) throw new Error('Failed to fetch monthly data');
-                const records = await res.json();
+            // Apply Styles (Border & Font 11) to Data Range
+            const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+            // Start applying styles from the data header row (after titleInfo)
+            const dataStartRow = titleInfo.length > 0 ? titleInfo.length : 0;
 
-                const daysInMonth = new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate();
+            for (let R = dataStartRow; R <= range.e.r; ++R) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (!ws[cell_address]) continue;
 
-                for (let i = 1; i <= daysInMonth; i++) {
-                    const dayDate = `${selectedMonth}-${String(i).padStart(2, '0')}`;
-                    // Find record for this date
-                    const record = records.find((r: any) => r.date === dayDate) || generateDummyAttendance(student.name, dayDate);
+                    // Default Style
+                    ws[cell_address].s = {
+                        font: { sz: 11, name: "Calibri" },
+                        border: {
+                            top: { style: "thin", color: { rgb: "000000" } },
+                            bottom: { style: "thin", color: { rgb: "000000" } },
+                            left: { style: "thin", color: { rgb: "000000" } },
+                            right: { style: "thin", color: { rgb: "000000" } }
+                        },
+                        alignment: { horizontal: "center", vertical: "center" }
+                    };
 
-                    data.push({
-                        Tgl: String(i).padStart(2, '0'),
-                        Sbh: record.subuh ? 'v' : '',
-                        Dha: record.dhuha ? 'v' : '',
-                        Dzhr: record.dzuhur ? 'v' : '',
-                        Ashr: record.ashar ? 'v' : '',
-                        Magh: record.maghrib ? 'v' : '',
-                        Isya: record.isya ? 'v' : '',
-                        Tahaj: record.tahajjud ? 'v' : '',
-                        Tarw: record.tarawih ? 'v' : '',
-                        Psa: record.puasa ? 'v' : '',
-                        Qrn: record.alquran ? 'v' : '',
-                        Ket: ''
+                    // Header Row Style (Bold)
+                    if (R === dataStartRow) {
+                        ws[cell_address].s.font.bold = true;
+                        ws[cell_address].s.fill = { fgColor: { rgb: "EEEEEE" } };
+                    }
+                }
+            }
+
+            // Add Signature Block (Only for monthly reports or if titleInfo exists)
+            if (titleInfo.length > 0) {
+                XLSX.utils.sheet_add_aoa(ws, [
+                    [''],
+                    ['', '', '', '', '', '', '', 'Mengetahui,'],
+                    ['', '', '', '', '', '', '', 'Wali Murid'],
+                    [''],
+                    [''],
+                    [''],
+                    ['', '', '', '', '', '', '', '(_____________________)']
+                ], { origin: -1 });
+            }
+
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+            // Check if Native Platform
+            if (Capacitor.isNativePlatform()) {
+                try {
+                    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+                    const savedFile = await Filesystem.writeFile({
+                        path: fileName,
+                        data: wbout,
+                        directory: Directory.Cache
                     });
+
+                    await Share.share({
+                        title: 'Download Excel',
+                        text: `Berikut adalah file ${fileName}`,
+                        url: savedFile.uri,
+                        dialogTitle: 'Simpan atau Bagikan Excel'
+                    });
+                } catch (e) {
+                    console.error('Error saving/sharing file', e);
+                    alert('Gagal menyimpan file di HP. Pastikan izin penyimpanan aktif.');
                 }
+            } else {
+                // Web Download
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
             }
-        }
-
-        // Determine start row for data (A1 is 0)
-        const origin = titleInfo.length > 0 ? `A${titleInfo.length + 1}` : 'A1';
-        const ws = XLSX.utils.json_to_sheet(data, { origin });
-
-        // Add Titles if any
-        if (titleInfo.length > 0) {
-            XLSX.utils.sheet_add_aoa(ws, titleInfo, { origin: 'A1' });
-            // Style Title
-            if (ws['A1']) ws['A1'].s = { font: { bold: true, sz: 14 } };
-            if (ws['A2']) ws['A2'].s = { font: { bold: true, sz: 11 } };
-            if (ws['A3']) ws['A3'].s = { font: { bold: true, sz: 11 } };
-            if (ws['A4']) ws['A4'].s = { font: { bold: true, sz: 11 } };
-        }
-
-        // Set Column Widths (Fit to Header Text - Optimized for A4)
-        let colWidths = [];
-        if (viewMode === 'school' && exportPeriod === 'monthly') {
-            colWidths = [
-                { wch: 5 },  // No
-                { wch: 30 }, // Nama
-                { wch: 10 }, // Kelas
-                // Days 1-31
-                ...Array(31).fill({ wch: 3 }),
-                { wch: 10 }, // Total Hadir
-                { wch: 10 }, // Total Terlambat
-            ];
-        } else if (viewMode === 'school') {
-            colWidths = [
-                { wch: 5 },  // No
-                { wch: 30 }, // Nama
-                { wch: 10 }, // Kelas
-                { wch: 15 }, // Tanggal
-                { wch: 15 }, // Jam Masuk
-                { wch: 15 }, // Status
-            ];
-        } else {
-            colWidths = [
-                { wch: 5 },  // Tgl
-                { wch: 5 },  // Sbh
-                { wch: 5 },  // Dha
-                { wch: 5 },  // Dzhr
-                { wch: 5 },  // Ashr
-                { wch: 6 },  // Magh
-                { wch: 5 },  // Isya
-                { wch: 6 },  // Tahaj
-                { wch: 6 },  // Tarw
-                { wch: 5 },  // Psa
-                { wch: 5 },  // Qrn
-                { wch: 5 },  // Ket
-            ];
-        }
-        ws['!cols'] = colWidths;
-
-        // Apply Styles (Border & Font 11) to Data Range
-        const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
-        // Start applying styles from the data header row (after titleInfo)
-        const dataStartRow = titleInfo.length > 0 ? titleInfo.length : 0;
-
-        for (let R = dataStartRow; R <= range.e.r; ++R) {
-            for (let C = range.s.c; C <= range.e.c; ++C) {
-                const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
-                if (!ws[cell_address]) continue;
-
-                // Default Style
-                ws[cell_address].s = {
-                    font: { sz: 11, name: "Calibri" },
-                    border: {
-                        top: { style: "thin", color: { rgb: "000000" } },
-                        bottom: { style: "thin", color: { rgb: "000000" } },
-                        left: { style: "thin", color: { rgb: "000000" } },
-                        right: { style: "thin", color: { rgb: "000000" } }
-                    },
-                    alignment: { horizontal: "center", vertical: "center" }
-                };
-
-                // Header Row Style (Bold)
-                if (R === dataStartRow) {
-                    ws[cell_address].s.font.bold = true;
-                    ws[cell_address].s.fill = { fgColor: { rgb: "EEEEEE" } };
-                }
-            }
-        }
-
-        // Add Signature Block (Only for monthly reports or if titleInfo exists)
-        if (titleInfo.length > 0) {
-            XLSX.utils.sheet_add_aoa(ws, [
-                [''],
-                ['', '', '', '', '', '', '', 'Mengetahui,'],
-                ['', '', '', '', '', '', '', 'Wali Murid'],
-                [''],
-                [''],
-                [''],
-                ['', '', '', '', '', '', '', '(_____________________)']
-            ], { origin: -1 });
-        }
-
-        XLSX.utils.book_append_sheet(wb, ws, sheetName);
-
-        // Check if Native Platform
-        if (Capacitor.isNativePlatform()) {
-            try {
-                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
-                const savedFile = await Filesystem.writeFile({
-                    path: fileName,
-                    data: wbout,
-                    directory: Directory.Cache
-                });
-
-                await Share.share({
-                    title: 'Download Excel',
-                    text: `Berikut adalah file ${fileName}`,
-                    url: savedFile.uri,
-                    dialogTitle: 'Simpan atau Bagikan Excel'
-                });
-            } catch (e) {
-                console.error('Error saving/sharing file', e);
-                alert('Gagal menyimpan file di HP. Pastikan izin penyimpanan aktif.');
-            }
-        } else {
-            // Web Download
-            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+        } catch (error) {
+            console.error('Export failed:', error);
+            alert('Gagal mengexport Excel. Silakan coba lagi.');
+        } finally {
+            setIsExporting(false);
         }
     };
 
@@ -659,10 +673,21 @@ export default function AdminDashboard() {
                 <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end">
                     <button
                         onClick={handleExport}
-                        className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                        disabled={isExporting}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 ${isExporting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'
+                            }`}
                     >
-                        <Download size={20} />
-                        Download Excel Laporan {exportScope === 'class' ? 'Kelas' : 'Siswa'} ({exportPeriod === 'daily' ? 'Harian' : 'Bulanan'})
+                        {isExporting ? (
+                            <>
+                                <Loader2 size={20} className="animate-spin" />
+                                Generating Excel...
+                            </>
+                        ) : (
+                            <>
+                                <Download size={20} />
+                                Download Excel Laporan {exportScope === 'class' ? 'Kelas' : 'Siswa'} ({exportPeriod === 'daily' ? 'Harian' : 'Bulanan'})
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
