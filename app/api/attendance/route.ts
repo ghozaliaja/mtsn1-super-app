@@ -123,7 +123,7 @@ export async function GET(request: Request) {
             });
 
             const data = students.map(student => ({
-                student: { id: student.id, name: student.name, class: student.class },
+                student: { id: student.id, name: student.name, class: student.class, nisn: student.nisn },
                 records: student.attendance.map(record => ({
                     date: record.date,
                     subuh: record.subuh,
@@ -159,7 +159,7 @@ export async function GET(request: Request) {
             const data = students.map(student => {
                 const record = student.attendance[0] || {};
                 return {
-                    student: { id: student.id, name: student.name, class: student.class },
+                    student: { id: student.id, name: student.name, class: student.class, nisn: student.nisn },
                     record: {
                         date: date,
                         subuh: record.subuh || false,
