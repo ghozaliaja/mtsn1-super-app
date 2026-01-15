@@ -29,8 +29,10 @@ model Attendance {
   student   Student  @relation(fields: [studentId], references: [id])
 
   // School Attendance (QR)
-  timeIn    DateTime?
-  status    String?      // PRESENT, LATE, etc.
+  timeIn    DateTime?    // Morning Scan
+  status    String?      // Morning Status: PRESENT, LATE
+  timeOut   DateTime?    // Afternoon Scan
+  statusOut String?      // Afternoon Status: PRESENT, LATE
 
   // Prayer statuses
   subuh    Boolean @default(false)
@@ -43,6 +45,9 @@ model Attendance {
   tarawih  Boolean @default(false)
   puasa    Boolean @default(false)
   alquran  Boolean @default(false)
+  
+  // WA Notification Status
+  waStatus String  @default("PENDING") // PENDING, SENT, FAILED
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

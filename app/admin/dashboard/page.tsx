@@ -755,6 +755,7 @@ export default function AdminDashboard() {
                                 ) : (
                                     <>
                                         <th className="p-4 text-center">Jam Masuk</th>
+                                        <th className="p-4 text-center">Jam Siang</th>
                                         <th className="p-4 text-center">Status</th>
                                     </>
                                 )}
@@ -782,11 +783,19 @@ export default function AdminDashboard() {
                                         <>
                                             <td className="p-4 text-center font-mono">
                                                 {record.timeIn ? format(new Date(record.timeIn), 'HH:mm') : '-'}
+                                                {record.status === 'TERLAMBAT' && <span className="text-red-500 text-xs block">(Telat)</span>}
+                                            </td>
+                                            <td className="p-4 text-center font-mono">
+                                                {record.timeOut ? format(new Date(record.timeOut), 'HH:mm') : '-'}
+                                                {record.statusOut === 'TERLAMBAT' && <span className="text-red-500 text-xs block">(Telat)</span>}
                                             </td>
                                             <td className="p-4 text-center">
-                                                {record.status === 'HADIR' && <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">HADIR</span>}
-                                                {record.status === 'TERLAMBAT' && <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold">TERLAMBAT</span>}
-                                                {!record.status && <span className="text-gray-400 text-xs italic">Belum Hadir</span>}
+                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${record.status === 'TERLAMBAT' || record.statusOut === 'TERLAMBAT'
+                                                        ? 'bg-yellow-100 text-yellow-700'
+                                                        : (record.timeIn ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500')
+                                                    }`}>
+                                                    {record.status === 'TERLAMBAT' || record.statusOut === 'TERLAMBAT' ? 'TERLAMBAT' : (record.timeIn ? 'HADIR' : 'BELUM')}
+                                                </span>
                                             </td>
                                         </>
                                     )}
