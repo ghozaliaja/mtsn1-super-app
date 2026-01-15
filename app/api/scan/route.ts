@@ -23,14 +23,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: 'Siswa tidak ditemukan' }, { status: 404 });
         }
 
-        // 2. Check if student exists
-        const student = await prisma.student.findUnique({
-            where: { barcode: qrCode }
-        });
 
-        if (!student) {
-            return NextResponse.json({ message: 'Siswa tidak ditemukan' }, { status: 404 });
-        }
 
         // 3. Determine Time Slot & Status
         const now = new Date();
