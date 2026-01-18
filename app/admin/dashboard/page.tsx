@@ -523,44 +523,44 @@ export default function AdminDashboard() {
     return (
         <div className="min-h-screen bg-gray-50 p-6 font-sans">
             {/* ... Header and Stats Cards ... */}
-            <header className="mb-8 flex justify-between items-start">
+            <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-800">
                         Dashboard {userRole === 'admin' ? 'Admin' : `Guru Kelas ${userClass}`}
                     </h1>
                     <p className="text-gray-500">Absen Sholat MTsN 1 Labuhan Batu</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-2 flex-wrap">
                     {userRole === 'admin' && (
                         <>
                             <button
                                 onClick={() => router.push('/scan')}
-                                className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm"
+                                className="flex items-center gap-2 bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm text-sm"
                             >
-                                <QrCode size={18} />
-                                Scan QR
+                                <QrCode size={16} />
+                                Scan
                             </button>
                             <button
                                 onClick={() => router.push('/admin/id-cards')}
-                                className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium shadow-sm"
+                                className="flex items-center gap-2 bg-orange-600 text-white px-3 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium shadow-sm text-sm"
                             >
-                                <IdCard size={18} />
+                                <IdCard size={16} />
                                 ID Cards
                             </button>
                             <button
                                 onClick={() => router.push('/admin/students')}
-                                className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm"
+                                className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm text-sm"
                             >
-                                <Users size={18} />
+                                <Users size={16} />
                                 Siswa
                             </button>
                         </>
                     )}
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-2 bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 transition-colors font-medium"
+                        className="flex items-center gap-2 bg-red-100 text-red-600 px-3 py-2 rounded-lg hover:bg-red-200 transition-colors font-medium text-sm"
                     >
-                        <LogOut size={18} />
+                        <LogOut size={16} />
                         Logout
                     </button>
                 </div>
