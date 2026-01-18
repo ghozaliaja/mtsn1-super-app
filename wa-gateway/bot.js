@@ -5,7 +5,7 @@ require('dotenv').config({ path: '../.env' }); // Load .env from root
 
 // Database Connection
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: 'postgresql://neondb_owner:npg_Kg3Wo7DivCXT@ep-curly-mountain-a1f3ag2w.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
     ssl: { rejectUnauthorized: false }
 });
 
@@ -30,8 +30,24 @@ client.on('ready', () => {
 client.initialize();
 
 // Polling Function
+let isProcessing = false;
+const SAFE_MODE = false; // SUDAH AMAN. SIAP KIRIM!
+
 async function startPolling() {
+    if (SAFE_MODE) {
+        console.log('\n⚠️  MODE AMAN (SAFE MODE) AKTIF  ⚠️');
+        console.log('Bot TIDAK akan mengirim pesan WhatsApp.');
+        console.log('Hanya akan mengecek antrian di database.\n');
+    } else {
+        console.log('\n🚀 MODE FULL AKTIF 🚀');
+        console.log('Bot akan mengirim pesan untuk SEMUA KELAS.');
+        console.log('Pastikan antrian sudah bersih sebelum mulai.\n');
+    }
+
     setInterval(async () => {
+        if (isProcessing) return;
+        isProcessing = true;
+
         try {
             // 1. Cari absensi yang status WA-nya PENDING dan dibuat HARI INI
             const query = `
@@ -44,16 +60,14 @@ async function startPolling() {
                 LIMIT 5
             `;
 
-            // Note: Adjust column names if Prisma maps them differently (usually camelCase in JS, but snake_case in DB if not specified)
-            // Prisma default mapping: camelCase model -> camelCase column? No, usually keeps case unless @map.
-            // Let's check schema. Prisma usually preserves case in DB if not mapped.
-            // But raw SQL needs exact DB column names.
-            // Safe bet: Use double quotes for mixed case if Prisma created them that way.
-            // Actually, let's check the previous schema view.
-            // "studentId", "waStatus", "createdAt", "parentPhone".
+            // Debug: Cek jumlah pending
+            const check = await pool.query(`SELECT COUNT(*) FROM "Attendance" WHERE "waStatus" = 'PENDING' AND "createdAt" >= CURRENT_DATE`);
+            if (parseInt(check.rows[0].count) > 0) {
+                console.log(`Found ${check.rows[0].count} pending records.`);
+            }
 
             const res = await pool.query(`
-                SELECT a.id, a."timeIn", a.status, s.name, s.class, s."parentPhone"
+                SELECT a.id, a."timeIn", a.status, s.name, s.class, s."parentPhone", a."createdAt"
                 FROM "Attendance" a
                 JOIN "Student" s ON a."studentId" = s.id
                 WHERE a."waStatus" = 'PENDING'
@@ -63,7 +77,9 @@ async function startPolling() {
             `);
 
             for (const row of res.rows) {
-                const { id, timeIn, status, name, class: className, parentPhone } = row;
+                const { id, timeIn, status, name, class: className, parentPhone, createdAt } = row;
+
+                console.log(`[DEBUG] Memproses data: ${name} | Dibuat: ${new Date(createdAt).toLocaleString()}`);
 
                 // Format Phone Number (62...)
                 let phone = parentPhone.replace(/\D/g, '');
@@ -74,25 +90,38 @@ async function startPolling() {
                 const time = new Date(timeIn).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                 const message = `*Laporan Kehadiran Siswa*\n\nNama: *${name}*\nKelas: *${className}*\nStatus: *${status}*\nWaktu: *${time}*\n\nTerima kasih.\n_MTsN 1 Labuhanbatu_`;
 
-                // Send Message
-                try {
-                    await client.sendMessage(phone, message);
-                    console.log(`✅ Pesan terkirim ke ${name} (${phone})`);
+                if (SAFE_MODE) {
+                    console.log(`[SIMULASI] Akan mengirim ke: ${name} (${phone})`);
+                    console.log(`[SIMULASI] Pesan: ${message.split('\n')[0]}...`);
+                    // Tandai sebagai SENT_SIMULATED agar tidak muncul terus di log
+                    // await pool.query(`UPDATE "Attendance" SET "waStatus" = 'SENT_SIM' WHERE id = $1`, [id]);
+                    // ATAU: Biarkan saja PENDING biar user tau masih ada antrian.
+                    console.log('❌ Pesan TIDAK dikirim (Safe Mode).');
+                } else {
+                    // Send Message
+                    try {
+                        await client.sendMessage(phone, message, { sendSeen: false });
+                        console.log(`✅ Pesan terkirim ke ${name} (${phone})`);
 
-                    // Update Status to SENT
-                    await pool.query(`UPDATE "Attendance" SET "waStatus" = 'SENT' WHERE id = $1`, [id]);
-                } catch (err) {
-                    console.error(`❌ Gagal kirim ke ${name}:`, err);
-                    // Update Status to FAILED so we don't retry forever
-                    await pool.query(`UPDATE "Attendance" SET "waStatus" = 'FAILED' WHERE id = $1`, [id]);
+                        // Update Status to SENT
+                        await pool.query(`UPDATE "Attendance" SET "waStatus" = 'SENT' WHERE id = $1`, [id]);
+                    } catch (err) {
+                        console.error(`❌ Gagal kirim ke ${name}:`, err);
+                        // Update Status to FAILED so we don't retry forever
+                        await pool.query(`UPDATE "Attendance" SET "waStatus" = 'FAILED' WHERE id = $1`, [id]);
+                    }
                 }
 
-                // Delay to prevent ban
-                await new Promise(r => setTimeout(r, 2000));
+                // Delay to prevent ban (Random 5-10 seconds)
+                const delay = Math.floor(Math.random() * 5000) + 5000;
+                console.log(`⏳ Menunggu ${delay / 1000} detik sebelum pesan berikutnya...`);
+                await new Promise(r => setTimeout(r, delay));
             }
 
         } catch (err) {
             console.error('Polling Error:', err);
+        } finally {
+            isProcessing = false;
         }
     }, 10000); // Check every 10 seconds
 }

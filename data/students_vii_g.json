@@ -1,34 +1,162 @@
 [
-    "AHMAD FAUZAN CHALID NASUTION",
-    "Ahmad Murkrizal Pulungan",
-    "Aidil Pratama Aditia",
-    "ALMIRA SYAKILLA SYAH",
-    "Asshyfa Della Putri Nasution",
-    "Avrillia Humayra",
-    "Ghaisan Fadrawi",
-    "Hafiz Tanzil Ritonga",
-    "HALILAH NAFEEZAH",
-    "Khalisa Ghaniyya Aqila",
-    "Krishna Nainggolan",
-    "M.Zidan Akbar Pakpahan",
-    "Marwah Maulida Pulungan",
-    "Miftahul Jannah Ritonga",
-    "Muhammad Adryan Zavani Ginting",
-    "MUHAMMAD BIRUL WALIDAIN",
-    "Muhammad Raffa Ritonga",
-    "Nadiva Ufaira Dahayu",
-    "Naurah Alya Zayyana Ritonga",
-    "NAZRIL ALWI MAHER ZAIN",
-    "Nazwa Aqela Nazani",
-    "Nurul Amira Syafira",
-    "Rizki Fathir Akbar Nasution",
-    "SHAFIRA AZHARA SIREGAR",
-    "Sonia Hendika",
-    "SUCI MAULYDIA SYAHFIRA HASIBUAN",
-    "Syafira Nazwa Aulia",
-    "Viandra Qaireen Nasution",
-    "Yusifa Annisa Achmad",
-    "ZAHRA SAFIRA SIHOMBING",
-    "ZAKY ALKHAIRAN",
-    "ZAKY AZRA"
+    {
+        "nisn": "3120391531",
+        "name": "AHMAD FAUZAN CHALID NASUTION",
+        "parentPhone": "082272166723"
+    },
+    {
+        "nisn": "3131214751",
+        "name": "Ahmad Murkrizal Pulungan",
+        "parentPhone": "082166969995"
+    },
+    {
+        "nisn": "0123960448",
+        "name": "Aidil Pratama Aditia",
+        "parentPhone": "081360602699"
+    },
+    {
+        "nisn": "3120681248",
+        "name": "ALMIRA SYAKILLA SYAH",
+        "parentPhone": "081271696770"
+    },
+    {
+        "nisn": "3124103946",
+        "name": "Asshyfa Della Putri Nasution",
+        "parentPhone": "081376672238"
+    },
+    {
+        "nisn": "3131719931",
+        "name": "Avrillia Humayra",
+        "parentPhone": "082178192455"
+    },
+    {
+        "nisn": "3138175713",
+        "name": "Ghaisan Fadrawi",
+        "parentPhone": "081263614196"
+    },
+    {
+        "nisn": "3121673383",
+        "name": "Hafiz Tanzil Ritonga",
+        "parentPhone": "081397478314"
+    },
+    {
+        "nisn": "3128033581",
+        "name": "HALILAH NAFEEZAH",
+        "parentPhone": "082276579585"
+    },
+    {
+        "nisn": "3137903343",
+        "name": "Khalisa Ghaniyya Aqila",
+        "parentPhone": "082369975379"
+    },
+    {
+        "nisn": "0122461374",
+        "name": "Krishna Nainggolan",
+        "parentPhone": "082167858000"
+    },
+    {
+        "nisn": "3134290688",
+        "name": "M.Zidan Akbar Pakpahan",
+        "parentPhone": "081263642451"
+    },
+    {
+        "nisn": "3139061120",
+        "name": "Marwah Maulida Pulungan",
+        "parentPhone": "081365614471"
+    },
+    {
+        "nisn": "3125110724",
+        "name": "Miftahul Jannah Ritonga",
+        "parentPhone": "081260311438"
+    },
+    {
+        "nisn": "0132420263",
+        "name": "Muhammad Adryan Zavani Ginting",
+        "parentPhone": "081263010195"
+    },
+    {
+        "nisn": "3124929487",
+        "name": "MUHAMMAD BIRUL WALIDAIN",
+        "parentPhone": "082367256171"
+    },
+    {
+        "nisn": "3133591538",
+        "name": "Muhammad Raffa Ritonga",
+        "parentPhone": "081396907939"
+    },
+    {
+        "nisn": "3136881472",
+        "name": "Nadiva Ufaira Dahayu",
+        "parentPhone": "085275624217"
+    },
+    {
+        "nisn": "3137541661",
+        "name": "Naurah Alya Zayyana Ritonga",
+        "parentPhone": "085275325728"
+    },
+    {
+        "nisn": "3130673371",
+        "name": "NAZRIL ALWI MAHER ZAIN",
+        "parentPhone": "085260626235"
+    },
+    {
+        "nisn": "3134969317",
+        "name": "Nazwa Aqela Nazani",
+        "parentPhone": "082215822347"
+    },
+    {
+        "nisn": "0132627179",
+        "name": "Nurul Amira Syafira",
+        "parentPhone": "085277815388"
+    },
+    {
+        "nisn": "3132510873",
+        "name": "Rizki Fathir Akbar Nasution",
+        "parentPhone": "081264900736"
+    },
+    {
+        "nisn": "3123134256",
+        "name": "SHAFIRA AZHARA SIREGAR",
+        "parentPhone": "081361538804"
+    },
+    {
+        "nisn": "3126118504",
+        "name": "Sonia Hendika",
+        "parentPhone": "085361301702"
+    },
+    {
+        "nisn": "3128525604",
+        "name": "SUCI MAULYDIA SYAHFIRA HASIBUAN",
+        "parentPhone": "081370021402"
+    },
+    {
+        "nisn": "3138589249",
+        "name": "Syafira Nazwa Aulia",
+        "parentPhone": "082367307741"
+    },
+    {
+        "nisn": "3138421146",
+        "name": "Viandra Qaireen Nasution",
+        "parentPhone": "082273347611"
+    },
+    {
+        "nisn": "3122266058",
+        "name": "Yusifa Annisa Achmad",
+        "parentPhone": "081362146200"
+    },
+    {
+        "nisn": "3122348345",
+        "name": "ZAHRA SAFIRA SIHOMBING",
+        "parentPhone": "082272730496"
+    },
+    {
+        "nisn": "3136823655",
+        "name": "ZAKY ALKHAIRAN",
+        "parentPhone": "082260096554"
+    },
+    {
+        "nisn": "3124726656",
+        "name": "ZAKY AZRA",
+        "parentPhone": "082360672200"
+    }
 ]
