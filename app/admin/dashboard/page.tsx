@@ -30,6 +30,8 @@ interface AttendanceRecord {
     alquran?: boolean;
     timeIn?: string;
     status?: string;
+    timeOut?: string;
+    statusOut?: string;
 }
 
 export default function AdminDashboard() {
@@ -545,6 +547,13 @@ export default function AdminDashboard() {
                                 <IdCard size={18} />
                                 ID Cards
                             </button>
+                            <button
+                                onClick={() => router.push('/admin/students')}
+                                className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm"
+                            >
+                                <Users size={18} />
+                                Siswa
+                            </button>
                         </>
                     )}
                     <button
@@ -791,8 +800,8 @@ export default function AdminDashboard() {
                                             </td>
                                             <td className="p-4 text-center">
                                                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${record.status === 'TERLAMBAT' || record.statusOut === 'TERLAMBAT'
-                                                        ? 'bg-yellow-100 text-yellow-700'
-                                                        : (record.timeIn ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500')
+                                                    ? 'bg-yellow-100 text-yellow-700'
+                                                    : (record.timeIn ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500')
                                                     }`}>
                                                     {record.status === 'TERLAMBAT' || record.statusOut === 'TERLAMBAT' ? 'TERLAMBAT' : (record.timeIn ? 'HADIR' : 'BELUM')}
                                                 </span>
