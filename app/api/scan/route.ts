@@ -9,18 +9,22 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: 'QR Code tidak valid' }, { status: 400 });
         }
 
+        const cleanQrCode = qrCode.trim();
+
         // 1. Find Student by Barcode (or NIS if barcode is empty)
         const student = await prisma.student.findFirst({
             where: {
                 OR: [
-                    { barcode: qrCode },
-                    { nisn: qrCode }
+                    { barcode: cleanQrCode },
+                    { nisn: cleanQrCode }
                 ]
             }
         });
 
         if (!student) {
-            return NextResponse.json({ message: 'Siswa tidak ditemukan' }, { status: 404 });
+            return NextResponse.json({
+                message: `Siswa tidak ditemukan (Kode: ${cleanQrCode})`
+            }, { status: 404 });
         }
 
 
