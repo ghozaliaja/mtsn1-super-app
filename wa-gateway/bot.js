@@ -87,8 +87,14 @@ async function startPolling() {
                 if (!phone.endsWith('@c.us')) phone += '@c.us';
 
                 // Message Content
-                const time = new Date(timeIn).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-                const message = `*Laporan Kehadiran Siswa*\n\nNama: *${name}*\nKelas: *${className}*\nStatus: *${status}*\nWaktu: *${time}*\n\nTerima kasih.\n_MTsN 1 Labuhanbatu_`;
+                // Message Content
+                const time = new Date(timeIn).toLocaleTimeString('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'Asia/Jakarta' // Force WIB
+                });
+
+                const message = `Assalamualaikum Wr. Wb. / Salam Sejahtera,\n\nDiberitahukan bahwa anak Bapak/Ibu:\nNama: *${name}*\nKelas: *${className}*\nStatus: *${status}*\nWaktu: *${time} WIB*\n\nTerima kasih.\n_MTsN 1 Labuhanbatu_`;
 
                 if (SAFE_MODE) {
                     console.log(`[SIMULASI] Akan mengirim ke: ${name} (${phone})`);
