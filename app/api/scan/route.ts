@@ -127,8 +127,8 @@ export async function POST(request: Request) {
                 where: { id: attendance.id },
                 data: {
                     timeOut: now,
-                    statusOut: status,
-                    waStatus: 'PENDING' // Trigger WA
+                    statusOut: status
+                    // waStatus: 'PENDING' // Disable WA for afternoon scan
                 }
             });
             message = status === 'TERLAMBAT' ? 'Absen Siang (Terlambat)' : 'Absen Siang Berhasil';
