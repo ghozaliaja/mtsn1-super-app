@@ -79,7 +79,7 @@ async function startPolling() {
             for (const row of res.rows) {
                 const { id, timeIn, status, name, class: className, parentPhone, createdAt } = row;
 
-                console.log(`[DEBUG] Memproses data: ${name} | Dibuat: ${new Date(createdAt).toLocaleString()}`);
+                console.log(`[DEBUG] Memproses data: ${name} | Dibuat: ${new Date(createdAt).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB`);
 
                 // Format Phone Number (62...)
                 let phone = parentPhone.replace(/\D/g, '');

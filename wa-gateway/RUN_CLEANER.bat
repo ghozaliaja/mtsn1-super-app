@@ -1,14 +1,8 @@
 @echo off
-title MEMBERSIHKAN ANTRIAN PESAN...
-color 0E
-echo ====================================================
-echo        PEMBERSIH ANTRIAN (ANTI-BAN)
-echo ====================================================
+echo MENGHAPUS DATA ABSENSI HARI INI...
 echo.
-echo Sedang membersihkan pesan yang nyangkut...
-node clear_queue.js
+cd ..
+call npx tsx scripts/wipe_today.ts
 echo.
-echo ====================================================
-echo Selesai. Silakan tutup dan jalankan START_BOT.bat
-echo ====================================================
+echo SELESAI. Data hari ini sudah bersih.
 pause
