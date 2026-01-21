@@ -5,8 +5,9 @@ import { renderToStream } from '@react-pdf/renderer';
 import { CaseDocument } from '@/components/pdf/CaseDocument';
 import React from 'react';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, props: { params: Promise<{ id: string }> }) {
     try {
+        const params = await props.params;
         const { id } = params;
 
         const caseData = await prisma.counselingCase.findUnique({
