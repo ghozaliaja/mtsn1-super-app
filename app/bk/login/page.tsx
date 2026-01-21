@@ -32,6 +32,7 @@ export default function BKLogin() {
                 if (data.user.role === 'BK') {
                     router.push('/bk/dashboard');
                 } else if (data.user.role === 'WALIKELAS') {
+                    // Login via ODOC Page -> Go to ODOC Dashboard
                     router.push('/bk/wali-kelas');
                 } else {
                     // If Admin tries to login here, maybe allow it or redirect to admin dashboard?

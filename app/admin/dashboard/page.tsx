@@ -55,7 +55,7 @@ export default function AdminDashboard() {
     const [mounted, setMounted] = useState(false);
 
     // Auth State
-    const [userRole, setUserRole] = useState<'admin' | 'teacher' | null>(null);
+    const [userRole, setUserRole] = useState<'admin' | 'teacher' | 'WALIKELAS' | null>(null);
     const [userClass, setUserClass] = useState<string | null>(null);
     const [userId, setUserId] = useState<number | null>(null);
 
@@ -74,7 +74,7 @@ export default function AdminDashboard() {
             setUserRole(role);
             setUserId(id);
 
-            if (role === 'teacher' && className) {
+            if ((role === 'teacher' || role === 'WALIKELAS') && className) {
                 setUserClass(className);
                 setSelectedClass(className);
             }
@@ -570,7 +570,7 @@ export default function AdminDashboard() {
                     <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
-                            <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} disabled={userRole === 'teacher'} className="w-full md:w-48 p-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-500">
+                            <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} disabled={userRole === 'teacher' || userRole === 'WALIKELAS'} className="w-full md:w-48 p-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-500">
                                 {classes.map((cls) => <option key={cls} value={cls}>{cls}</option>)}
                             </select>
                         </div>
