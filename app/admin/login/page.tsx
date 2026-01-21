@@ -30,8 +30,11 @@ export default function AdminLogin() {
                 localStorage.setItem('userSession', JSON.stringify(data.user));
 
                 // Redirect based on role
+                // Redirect based on role
                 if (data.user.role === 'BK') {
                     router.push('/bk/dashboard');
+                } else if (data.user.role === 'WALIKELAS') {
+                    router.push('/bk/wali-kelas');
                 } else {
                     router.push('/admin/dashboard');
                 }
