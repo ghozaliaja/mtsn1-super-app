@@ -87,7 +87,7 @@ export default function WaliKelasDashboard() {
     const fetchCases = async () => {
         setLoading(true);
         try {
-            const res = await fetch('/api/bk/cases');
+            const res = await fetch(`/api/bk/cases?userId=${userId}`);
             if (res.ok) {
                 const data = await res.json();
                 setCases(data);
