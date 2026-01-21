@@ -563,7 +563,7 @@ export default function AdminDashboard() {
 
     return (
         <div className="min-h-screen bg-gray-50 p-6 font-sans">
-            {/* ... Header and Stats Cards ... */}
+            {/* Header */}
             <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-gray-800">
@@ -574,215 +574,62 @@ export default function AdminDashboard() {
                 <div className="flex gap-2 flex-wrap">
                     {userRole === 'admin' && (
                         <>
-                            <button
-                                onClick={() => router.push('/scan')}
-                                className="flex items-center gap-2 bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm text-sm"
-                            >
-                                <QrCode size={16} />
-                                Scan
-                            </button>
-                            <button
-                                onClick={() => router.push('/admin/id-cards')}
-                                className="flex items-center gap-2 bg-orange-600 text-white px-3 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium shadow-sm text-sm"
-                            >
-                                <IdCard size={16} />
-                                ID Cards
-                            </button>
-                            <button
-                                onClick={() => router.push('/admin/students')}
-                                className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm text-sm"
-                            >
-                                <Users size={16} />
-                                Siswa
-                            </button>
+                            <button onClick={() => router.push('/scan')} className="flex items-center gap-2 bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm text-sm"><QrCode size={16} /> Scan</button>
+                            <button onClick={() => router.push('/admin/id-cards')} className="flex items-center gap-2 bg-orange-600 text-white px-3 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium shadow-sm text-sm"><IdCard size={16} /> ID Cards</button>
+                            <button onClick={() => router.push('/admin/students')} className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm text-sm"><Users size={16} /> Siswa</button>
                         </>
                     )}
-                    <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-2 bg-red-100 text-red-600 px-3 py-2 rounded-lg hover:bg-red-200 transition-colors font-medium text-sm"
-                    >
-                        <LogOut size={16} />
-                        Logout
-                    </button>
+                    <button onClick={handleLogout} className="flex items-center gap-2 bg-red-100 text-red-600 px-3 py-2 rounded-lg hover:bg-red-200 transition-colors font-medium text-sm"><LogOut size={16} /> Logout</button>
                 </div>
             </header>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-                    <div className="bg-blue-100 p-3 rounded-lg text-blue-600">
-                        <Users size={24} />
-                    </div>
-                    <div>
-                        <p className="text-sm text-gray-500">Total Siswa</p>
-                        <p className="text-2xl font-bold text-gray-800">{students.length}</p>
-                    </div>
+                    <div className="bg-blue-100 p-3 rounded-lg text-blue-600"><Users size={24} /></div>
+                    <div><p className="text-sm text-gray-500">Total Siswa</p><p className="text-2xl font-bold text-gray-800">{students.length}</p></div>
                 </div>
-
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-                    <div className="bg-green-100 p-3 rounded-lg text-green-600">
-                        <FileSpreadsheet size={24} />
-                    </div>
-                    <div>
-                        <p className="text-sm text-gray-500">Kehadiran Hari Ini</p>
-                        <p className="text-2xl font-bold text-gray-800">
-                            {students.length > 0 ? Math.round((previewData.filter(({ record }) =>
-                                record.subuh || record.dhuha || record.dzuhur || record.ashar ||
-                                record.maghrib || record.isya || record.tahajjud ||
-                                (isRamadan && record.tarawih) || (isRamadan && record.puasa) || record.alquran
-                            ).length / students.length) * 100) : 0}%
-                        </p>
-                    </div>
+                    <div className="bg-green-100 p-3 rounded-lg text-green-600"><FileSpreadsheet size={24} /></div>
+                    <div><p className="text-sm text-gray-500">Kehadiran Hari Ini</p><p className="text-2xl font-bold text-gray-800">{students.length > 0 ? Math.round((previewData.filter(({ record }) => record.subuh || record.dhuha || record.dzuhur || record.ashar || record.maghrib || record.isya || record.tahajjud || record.tarawih).length / students.length) * 100) : 0}%</p></div>
+                </div>
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div className="bg-purple-100 p-3 rounded-lg text-purple-600"><Calendar size={24} /></div>
+                    <div><p className="text-sm text-gray-500">Tanggal</p><p className="text-lg font-bold text-gray-800">{format(new Date(selectedDate), 'dd MMMM yyyy')}</p></div>
                 </div>
             </div>
 
-            {/* View Mode Toggle */}
-            <div className="flex justify-center mb-8">
-                <div className="bg-white p-1 rounded-xl shadow-sm border border-gray-200 inline-flex">
-                    <button
-                        onClick={() => setViewMode('prayer')}
-                        className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'prayer' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}
-                    >
-                        Absensi Sholat
-                    </button>
-                    <button
-                        onClick={() => setViewMode('school')}
-                        className={`px-6 py-2 rounded-lg text-sm font-medium transition-all ${viewMode === 'school' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}
-                    >
-                        Absensi Sekolah (QR)
-                    </button>
-                </div>
-            </div>
-
-            {/* Export Section */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
-                <div className="p-6 border-b border-gray-100">
-                    <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                        <Download size={20} />
-                        Download Laporan / Export Excel
-                    </h2>
-                </div>
-                <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {/* 1. Scope Selection */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                            <Filter size={16} /> Jenis Laporan
-                        </label>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setExportScope('class')}
-                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${exportScope === 'class' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                    }`}
-                            >
-                                Per Kelas
-                            </button>
-                            <button
-                                onClick={() => setExportScope('student')}
-                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${exportScope === 'student' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                    }`}
-                            >
-                                Per Siswa
-                            </button>
+            {/* Controls */}
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+                <div className="flex flex-col md:flex-row gap-4 justify-between items-end">
+                    <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+                            <select value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)} disabled={userRole === 'teacher'} className="w-full md:w-48 p-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-100 disabled:text-gray-500">
+                                {classes.map((cls) => <option key={cls} value={cls}>{cls}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                            <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-full md:w-48 p-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Mode Tampilan</label>
+                            <div className="flex bg-gray-100 p-1 rounded-lg">
+                                <button onClick={() => setViewMode('prayer')} className={`flex-1 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'prayer' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Sholat</button>
+                                <button onClick={() => setViewMode('school')} className={`flex-1 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'school' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Sekolah</button>
+                            </div>
                         </div>
                     </div>
-
-                    {/* 2. Target Selection */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">
-                            {exportScope === 'class' ? 'Pilih Kelas' : 'Pilih Siswa'}
-                        </label>
-                        {exportScope === 'class' ? (
-                            <select
-                                value={selectedClass}
-                                onChange={(e) => setSelectedClass(e.target.value)}
-                                disabled={userRole === 'teacher'}
-                                className={`w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-800 ${userRole === 'teacher' ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                            >
-                                {classes.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                        ) : (
-                            <select
-                                value={selectedStudentId}
-                                onChange={(e) => setSelectedStudentId(Number(e.target.value))}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
-                            >
-                                {students.map(s => <option key={s.id} value={s.id}>{s.name} ({s.class})</option>)}
-                            </select>
-                        )}
-                    </div>
-
-                    {/* 3. Period Selection */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                            <Calendar size={16} /> Periode
-                        </label>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setExportPeriod('daily')}
-                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${exportPeriod === 'daily' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                    }`}
-                            >
-                                Harian
-                            </button>
-                            <button
-                                onClick={() => setExportPeriod('monthly')}
-                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${exportPeriod === 'monthly' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                    }`}
-                            >
-                                Bulanan
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* 4. Date/Month Picker */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700">
-                            {exportPeriod === 'daily' ? 'Pilih Tanggal' : 'Pilih Bulan'}
-                        </label>
-                        {exportPeriod === 'daily' ? (
-                            <input
-                                type="date"
-                                value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
-                            />
-                        ) : (
-                            <input
-                                type="month"
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-gray-800"
-                            />
-                        )}
-                    </div>
-                </div>
-                <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end">
-                    <button
-                        onClick={handleExport}
-                        disabled={isExporting}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 ${isExporting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'
-                            }`}
-                    >
-                        {isExporting ? (
-                            <>
-                                <Loader2 size={20} className="animate-spin" />
-                                Generating Excel...
-                            </>
-                        ) : (
-                            <>
-                                <Download size={20} />
-                                Download Excel Laporan {exportScope === 'class' ? 'Kelas' : 'Siswa'} ({exportPeriod === 'daily' ? 'Harian' : 'Bulanan'})
-                            </>
-                        )}
+                    <button onClick={handleExport} disabled={isExporting} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 ${isExporting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'}`}>
+                        {isExporting ? <><Loader2 size={20} className="animate-spin" /> Generating Excel...</> : <><Download size={20} /> Download Excel</>}
                     </button>
                 </div>
             </div>
 
-            {/* Preview Table */}
+            {/* Table */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="p-6 border-b border-gray-100 bg-gray-50/50">
-                    <h2 className="text-lg font-semibold text-gray-800">Preview Data Hari Ini</h2>
-                </div>
+                <div className="p-6 border-b border-gray-100 bg-gray-50/50"><h2 className="text-lg font-semibold text-gray-800">Preview Data Hari Ini</h2></div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm text-gray-600">
                         <thead className="bg-gray-100 text-gray-800 font-semibold uppercase text-xs tracking-wider">
@@ -800,131 +647,129 @@ export default function AdminDashboard() {
                                         <th className="p-4 text-center">Isya</th>
                                         {isRamadan && <th className="p-4 text-center">Tarawih</th>}
                                         {isRamadan && <th className="p-4 text-center">Puasa</th>}
-                                        <th className="p-4 text-center">Qur'an</th>
+                                        {isRamadan && <th className="p-4 text-center">Tadarus</th>}
                                     </>
                                 ) : (
                                     <>
-                                        <th className="p-4 text-center">Jam Masuk</th>
-                                        <th className="p-4 text-center">Jam Siang</th>
-                                        <th className="p-4 text-center">Status</th>
+                                        <th className="p-4">Jam Masuk</th>
+                                        <th className="p-4">Status Masuk</th>
+                                        <th className="p-4">Jam Pulang</th>
+                                        <th className="p-4">Status Pulang</th>
                                     </>
                                 )}
-                                {userRole === 'teacher' && <th className="p-4 text-center">Aksi</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
-                            {mounted && previewData.map(({ student, record }) => (
-                                <tr key={student.id} className="hover:bg-blue-50 transition-colors">
-                                    <td className="p-4 font-medium text-gray-900 sticky left-0 bg-white hover:bg-blue-50 transition-colors">{student.name}</td>
-                                    <td className="p-4 text-gray-800">{student.class}</td>
-                                    {viewMode === 'prayer' ? (
-                                        <>
-                                            <td className="p-4 text-center">{record.tahajjud ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                            <td className="p-4 text-center">{record.subuh ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                            <td className="p-4 text-center">{record.dhuha ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                            <td className="p-4 text-center">{record.dzuhur ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                            <td className="p-4 text-center">{record.ashar ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                            <td className="p-4 text-center">{record.maghrib ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                            <td className="p-4 text-center">{record.isya ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                            {isRamadan && <td className="p-4 text-center">{record.tarawih ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>}
-                                            {isRamadan && <td className="p-4 text-center">{record.puasa ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>}
-                                            <td className="p-4 text-center">{record.alquran ? <span className="text-green-600 font-bold text-lg">✓</span> : <span className="text-gray-300">-</span>}</td>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <td className="p-4 text-center font-mono">
-                                                {record.timeIn ? format(new Date(record.timeIn), 'HH:mm') : '-'}
-                                                {record.status === 'TERLAMBAT' && <span className="text-red-500 text-xs block">(Telat)</span>}
+                            {students.map((student) => {
+                                const record = previewData.find(d => d.student.id === student.id)?.record || {} as any;
+                                return (
+                                    <tr key={student.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                                        <td className="p-4 font-medium text-gray-900 sticky left-0 bg-white">{student.name}</td>
+                                        <td className="p-4">{student.class}</td>
+                                        {userRole === 'teacher' && (
+                                            <td className="p-4 text-center">
+                                                <button
+                                                    onClick={() => openReportModal(student)}
+                                                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                                                    title="Lapor Pelanggaran ke BK"
+                                                >
+                                                    <AlertTriangle size={18} />
+                                                </button>
                                             </td>
-                                            <td className="p-4 text-center font-mono">
-                                                {record.timeOut ? format(new Date(record.timeOut), 'HH:mm') : '-'}
-                                                {record.statusOut === 'TERLAMBAT' && <span className="text-red-500 text-xs block">(Telat)</span>}
-                                            </td>
-                                        </>
-                                    )}
-                                    {userRole === 'teacher' && (
-                                        <td className="p-4 text-center">
-                                            <button
-                                                onClick={() => openReportModal(student)}
-                                                className="bg-red-100 text-red-600 p-2 rounded-lg hover:bg-red-200 transition-colors"
-                                                title="Lapor Pelanggaran ke BK"
-                                            >
-                                                <AlertTriangle size={18} />
-                                            </button>
-                                        </td>
-                                    )}
-                                </tr>
-                            ))}
+                                        )}
+                                        {viewMode === 'prayer' ? (
+                                            <>
+                                                <td className="p-4 text-center">{record.tahajjud ? '✅' : '-'}</td>
+                                                <td className="p-4 text-center">{record.subuh ? '✅' : '-'}</td>
+                                                <td className="p-4 text-center">{record.dhuha ? '✅' : '-'}</td>
+                                                <td className="p-4 text-center">{record.dzuhur ? '✅' : '-'}</td>
+                                                <td className="p-4 text-center">{record.ashar ? '✅' : '-'}</td>
+                                                <td className="p-4 text-center">{record.maghrib ? '✅' : '-'}</td>
+                                                <td className="p-4 text-center">{record.isya ? '✅' : '-'}</td>
+                                                {isRamadan && <td className="p-4 text-center">{record.tarawih ? '✅' : '-'}</td>}
+                                                {isRamadan && <td className="p-4 text-center">{record.puasa ? '✅' : '-'}</td>}
+                                                {isRamadan && <td className="p-4 text-center">{record.alquran ? '✅' : '-'}</td>}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <td className="p-4">{record.timeIn || '-'}</td>
+                                                <td className="p-4"><span className={`px-2 py-1 rounded-full text-xs font-medium ${record.status === 'LATE' ? 'bg-yellow-100 text-yellow-700' : record.status === 'PRESENT' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{record.status || '-'}</span></td>
+                                                <td className="p-4">{record.timeOut || '-'}</td>
+                                                <td className="p-4"><span className={`px-2 py-1 rounded-full text-xs font-medium ${record.statusOut === 'LATE' ? 'bg-yellow-100 text-yellow-700' : record.statusOut === 'PRESENT' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{record.statusOut || '-'}</span></td>
+                                            </>
+                                        )}
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
+            </div>
 
-                {/* Report Modal */}
-                {
-                    isReportModalOpen && (
-                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-                                <div className="flex items-center gap-3 mb-4 text-red-600">
-                                    <AlertTriangle size={24} />
-                                    <h3 className="text-xl font-bold">Lapor Pelanggaran (ODOC)</h3>
-                                </div>
+            {/* Report Modal */}
+            {isReportModalOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+                        <div className="flex items-center gap-3 mb-4 text-red-600">
+                            <AlertTriangle size={24} />
+                            <h3 className="text-xl font-bold">Lapor Pelanggaran (ODOC)</h3>
+                        </div>
 
-                                <div className="mb-4">
-                                    <p className="text-sm text-gray-500">Siswa</p>
-                                    <p className="font-medium text-lg">{reportStudent?.name}</p>
-                                    <p className="text-gray-600">{reportStudent?.class}</p>
-                                </div>
+                        <div className="mb-4">
+                            <p className="text-sm text-gray-500">Siswa</p>
+                            <p className="font-medium text-lg">{reportStudent?.name}</p>
+                            <p className="text-gray-600">{reportStudent?.class}</p>
+                        </div>
 
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Pelanggaran</label>
-                                        <select
-                                            value={violationType}
-                                            onChange={(e) => setViolationType(e.target.value)}
-                                            className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500"
-                                        >
-                                            <option value="PC">PC - Pacaran</option>
-                                            <option value="CB">CB - Cabut / Bolos</option>
-                                            <option value="BR">BR - Berkelahi</option>
-                                            <option value="MK">MK - Merokok</option>
-                                            <option value="TL">TL - Terlambat</option>
-                                            <option value="ATTR">ATTR - Atribut</option>
-                                            <option value="MC">MC - Mencuri</option>
-                                            <option value="ST">ST - Senjata Tajam</option>
-                                            <option value="BY">BY - Bullying</option>
-                                            <option value="GL">GL - Geng Liar</option>
-                                            <option value="MB">MB - Malas Belajar</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Keterangan Tambahan</label>
-                                        <textarea
-                                            value={violationDesc}
-                                            onChange={(e) => setViolationDesc(e.target.value)}
-                                            className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500 h-24"
-                                            placeholder="Ceritakan kronologi singkat..."
-                                        ></textarea>
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-end gap-3 mt-6">
-                                    <button
-                                        onClick={() => setIsReportModalOpen(false)}
-                                        className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-                                    >
-                                        Batal
-                                    </button>
-                                    <button
-                                        onClick={submitReport}
-                                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
-                                    >
-                                        Kirim Laporan
-                                    </button>
-                                </div>
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Pelanggaran</label>
+                                <select
+                                    value={violationType}
+                                    onChange={(e) => setViolationType(e.target.value)}
+                                    className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500"
+                                >
+                                    <option value="PC">PC - Pacaran</option>
+                                    <option value="CB">CB - Cabut / Bolos</option>
+                                    <option value="BR">BR - Berkelahi</option>
+                                    <option value="MK">MK - Merokok</option>
+                                    <option value="TL">TL - Terlambat</option>
+                                    <option value="ATTR">ATTR - Atribut</option>
+                                    <option value="MC">MC - Mencuri</option>
+                                    <option value="ST">ST - Senjata Tajam</option>
+                                    <option value="BY">BY - Bullying</option>
+                                    <option value="GL">GL - Geng Liar</option>
+                                    <option value="MB">MB - Malas Belajar</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Keterangan Tambahan</label>
+                                <textarea
+                                    value={violationDesc}
+                                    onChange={(e) => setViolationDesc(e.target.value)}
+                                    className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500 h-24"
+                                    placeholder="Ceritakan kronologi singkat..."
+                                ></textarea>
                             </div>
                         </div>
-                    )
-                }
-            </div >
-            );
+
+                        <div className="flex justify-end gap-3 mt-6">
+                            <button
+                                onClick={() => setIsReportModalOpen(false)}
+                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                onClick={submitReport}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
+                            >
+                                Kirim Laporan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 }

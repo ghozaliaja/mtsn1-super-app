@@ -18,17 +18,20 @@ async function main() {
     });
     console.log('Created Admin:', admin.username);
 
-    // 2. Create BK User (ODOC)
-    const bk = await prisma.user.upsert({
-        where: { username: 'odoc' },
-        update: {},
-        create: {
-            username: 'odoc',
-            password: 'guru', // Default password
-            role: Role.BK,
-        },
-    });
-    console.log('Created BK User:', bk.username);
+    // 2. Create BK Users (ODOC 1-6)
+    for (let i = 1; i <= 6; i++) {
+        const username = `odoc${i}`;
+        const bk = await prisma.user.upsert({
+            where: { username: username },
+            update: {},
+            create: {
+                username: username,
+                password: 'guru', // Default password
+                role: Role.BK,
+            },
+        });
+        console.log(`Created BK User: ${bk.username}`);
+    }
 
     // 3. Create Wali Kelas (Simpler IDs: kelas7a, kelas8b, etc.)
     const classes = [
