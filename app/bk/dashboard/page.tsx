@@ -4,6 +4,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { LogOut, FileText, CheckCircle, Clock, Search, Printer } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 export default function BKDashboard() {
     const router = useRouter();
@@ -76,17 +79,49 @@ export default function BKDashboard() {
             if (!res.ok) throw new Error('Gagal download PDF');
 
             const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Berita_Acara_${c.student.name.replace(/\s/g, '_')}.pdf`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+
+            if (Capacitor.isNativePlatform()) {
+                // Native: Save and Share
+                const fileName = `Berita_Acara_${c.student.name.replace(/\s/g, '_')}.pdf`;
+                const reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = async () => {
+                    const base64data = reader.result as string;
+                    // Remove prefix (data:application/pdf;base64,)
+                    const base64Content = base64data.split(',')[1];
+
+                    try {
+                        const result = await Filesystem.writeFile({
+                            path: fileName,
+                            data: base64Content,
+                            directory: Directory.Documents,
+                        });
+
+                        await Share.share({
+                            title: 'Berita Acara BK',
+                            text: `Berita Acara Konseling - ${c.student.name}`,
+                            url: result.uri,
+                            dialogTitle: 'Cetak / Simpan PDF',
+                        });
+                    } catch (e) {
+                        console.error('Native save error', e);
+                        alert('Gagal menyimpan file di Android. Coba cek izin penyimpanan.');
+                    }
+                };
+            } else {
+                // Web: Blob Download
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Berita_Acara_${c.student.name.replace(/\s/g, '_')}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }
         } catch (error) {
             console.error('Download error:', error);
-            alert('Gagal mendownload PDF. Pastikan izin penyimpanan aktif.');
+            alert('Gagal mendownload PDF.');
         }
     };
 
