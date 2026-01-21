@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { usePrayerTimes } from '../../hooks/usePrayerTimes';
 
 import { useRouter } from 'next/navigation';
-import { Download, Users, FileSpreadsheet, Calendar, Filter, LogOut, Loader2, QrCode, IdCard } from 'lucide-react';
+import { Download, Users, FileSpreadsheet, Calendar, Filter, LogOut, Loader2, QrCode, IdCard, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 
 import { CLASSES } from '../../../lib/constants';
@@ -57,6 +57,13 @@ export default function AdminDashboard() {
     // Auth State
     const [userRole, setUserRole] = useState<'admin' | 'teacher' | null>(null);
     const [userClass, setUserClass] = useState<string | null>(null);
+    const [userId, setUserId] = useState<number | null>(null);
+
+    // Report Modal State
+    const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+    const [reportStudent, setReportStudent] = useState<Student | null>(null);
+    const [violationType, setViolationType] = useState('PC');
+    const [violationDesc, setViolationDesc] = useState('');
 
     // Check Auth on Mount
     useEffect(() => {
@@ -67,8 +74,9 @@ export default function AdminDashboard() {
         }
 
         try {
-            const { role, className } = JSON.parse(session);
+            const { role, className, id } = JSON.parse(session);
             setUserRole(role);
+            setUserId(id);
 
             if (role === 'teacher' && className) {
                 setUserClass(className);
@@ -518,6 +526,39 @@ export default function AdminDashboard() {
         router.push('/');
     };
 
+    const openReportModal = (student: Student) => {
+        setReportStudent(student);
+        setViolationType('PC');
+        setViolationDesc('');
+        setIsReportModalOpen(true);
+    };
+
+    const submitReport = async () => {
+        if (!reportStudent || !userId) return;
+
+        try {
+            const res = await fetch('/api/bk/cases', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    studentId: reportStudent.id,
+                    reporterId: userId,
+                    violationType,
+                    description: violationDesc
+                })
+            });
+
+            if (res.ok) {
+                alert('Laporan berhasil dikirim ke BK');
+                setIsReportModalOpen(false);
+            } else {
+                alert('Gagal mengirim laporan');
+            }
+        } catch (error) {
+            alert('Terjadi kesalahan');
+        }
+    };
+
     if (!mounted) return null;
 
     return (
@@ -768,6 +809,7 @@ export default function AdminDashboard() {
                                         <th className="p-4 text-center">Status</th>
                                     </>
                                 )}
+                                {userRole === 'teacher' && <th className="p-4 text-center">Aksi</th>}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -798,22 +840,91 @@ export default function AdminDashboard() {
                                                 {record.timeOut ? format(new Date(record.timeOut), 'HH:mm') : '-'}
                                                 {record.statusOut === 'TERLAMBAT' && <span className="text-red-500 text-xs block">(Telat)</span>}
                                             </td>
-                                            <td className="p-4 text-center">
-                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${record.status === 'TERLAMBAT' || record.statusOut === 'TERLAMBAT'
-                                                    ? 'bg-yellow-100 text-yellow-700'
-                                                    : (record.timeIn ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500')
-                                                    }`}>
-                                                    {record.status === 'TERLAMBAT' || record.statusOut === 'TERLAMBAT' ? 'TERLAMBAT' : (record.timeIn ? 'HADIR' : 'BELUM')}
-                                                </span>
-                                            </td>
                                         </>
+                                    )}
+                                    {userRole === 'teacher' && (
+                                        <td className="p-4 text-center">
+                                            <button
+                                                onClick={() => openReportModal(student)}
+                                                className="bg-red-100 text-red-600 p-2 rounded-lg hover:bg-red-200 transition-colors"
+                                                title="Lapor Pelanggaran ke BK"
+                                            >
+                                                <AlertTriangle size={18} />
+                                            </button>
+                                        </td>
                                     )}
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
-    );
+
+                {/* Report Modal */}
+                {
+                    isReportModalOpen && (
+                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                            <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+                                <div className="flex items-center gap-3 mb-4 text-red-600">
+                                    <AlertTriangle size={24} />
+                                    <h3 className="text-xl font-bold">Lapor Pelanggaran (ODOC)</h3>
+                                </div>
+
+                                <div className="mb-4">
+                                    <p className="text-sm text-gray-500">Siswa</p>
+                                    <p className="font-medium text-lg">{reportStudent?.name}</p>
+                                    <p className="text-gray-600">{reportStudent?.class}</p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Pelanggaran</label>
+                                        <select
+                                            value={violationType}
+                                            onChange={(e) => setViolationType(e.target.value)}
+                                            className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500"
+                                        >
+                                            <option value="PC">PC - Pacaran</option>
+                                            <option value="CB">CB - Cabut / Bolos</option>
+                                            <option value="BR">BR - Berkelahi</option>
+                                            <option value="MK">MK - Merokok</option>
+                                            <option value="TL">TL - Terlambat</option>
+                                            <option value="ATTR">ATTR - Atribut</option>
+                                            <option value="MC">MC - Mencuri</option>
+                                            <option value="ST">ST - Senjata Tajam</option>
+                                            <option value="BY">BY - Bullying</option>
+                                            <option value="GL">GL - Geng Liar</option>
+                                            <option value="MB">MB - Malas Belajar</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Keterangan Tambahan</label>
+                                        <textarea
+                                            value={violationDesc}
+                                            onChange={(e) => setViolationDesc(e.target.value)}
+                                            className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500 h-24"
+                                            placeholder="Ceritakan kronologi singkat..."
+                                        ></textarea>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end gap-3 mt-6">
+                                    <button
+                                        onClick={() => setIsReportModalOpen(false)}
+                                        className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        onClick={submitReport}
+                                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium"
+                                    >
+                                        Kirim Laporan
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
+            </div >
+            );
 }

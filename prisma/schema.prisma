@@ -20,6 +20,46 @@ model Student {
   parentPhone String?
 
   attendance Attendance[]
+  cases      CounselingCase[]
+}
+
+enum Role {
+  ADMIN
+  WALIKELAS
+  BK
+}
+
+enum CaseStatus {
+  PENDING
+  PROCESSED
+  RESOLVED
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  username      String   @unique
+  password      String
+  role          Role
+  assignedClass String? // Only for WALIKELAS
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  reportedCases CounselingCase[] @relation("Reporter")
+}
+
+model CounselingCase {
+  id            Int        @id @default(autoincrement())
+  studentId     Int
+  student       Student    @relation(fields: [studentId], references: [id])
+  reporterId    Int
+  reporter      User       @relation("Reporter", fields: [reporterId], references: [id])
+  violationType String     // PC, CB, BR, etc.
+  description   String?
+  resolution    String?
+  status        CaseStatus @default(PENDING)
+  createdAt     DateTime   @default(now())
+  resolvedAt    DateTime?
+  updatedAt     DateTime   @updatedAt
 }
 
 model Attendance {

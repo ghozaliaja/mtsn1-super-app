@@ -12,44 +12,35 @@ export default function AdminLogin() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
 
-        // 1. Check Admin Login
-        if (username === 'admin' && password === 'adminmts') {
-            localStorage.setItem('userSession', JSON.stringify({ role: 'admin' }));
-            router.push('/admin/dashboard');
-            return;
-        }
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
 
-        // 2. Check Teacher Login
-        // Format: username 'kelasviiia' -> class 'VII A'
-        // Password: 'guru'
-        if (password === 'guru') {
-            let inputClass = username.toLowerCase().replace(/\s/g, '');
+            const data = await res.json();
 
-            // Map Arabic numerals to Roman numerals for class levels
-            inputClass = inputClass.replace('kelas7', 'kelasvii');
-            inputClass = inputClass.replace('kelas8', 'kelasviii');
-            inputClass = inputClass.replace('kelas9', 'kelasix');
+            if (res.ok) {
+                // Save user session
+                localStorage.setItem('userSession', JSON.stringify(data.user));
 
-            // Find matching class from constants
-            const matchedClass = CLASSES.find(c =>
-                `kelas${c.toLowerCase().replace(/\s/g, '')}` === inputClass
-            );
-
-            if (matchedClass) {
-                localStorage.setItem('userSession', JSON.stringify({
-                    role: 'teacher',
-                    className: matchedClass
-                }));
-                router.push('/admin/dashboard');
-                return;
+                // Redirect based on role
+                if (data.user.role === 'BK') {
+                    router.push('/bk/dashboard');
+                } else {
+                    router.push('/admin/dashboard');
+                }
+            } else {
+                setError(data.message || 'Login gagal');
             }
+        } catch (err) {
+            setError('Terjadi kesalahan sistem');
         }
-
-        setError('Username atau password salah!');
     };
 
     return (
