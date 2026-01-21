@@ -48,7 +48,7 @@ export default function Home() {
         </Link>
 
         <Link
-          href="/admin/login"
+          href="/bk/login"
           className="group relative overflow-hidden bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-xl transition-all duration-300 flex items-center gap-4"
         >
           <div className="bg-red-100 p-4 rounded-xl group-hover:bg-red-600 transition-colors duration-300">
