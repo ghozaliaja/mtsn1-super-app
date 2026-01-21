@@ -70,6 +70,26 @@ export default function BKDashboard() {
         setIsModalOpen(true);
     };
 
+    const handlePrint = async (c: any) => {
+        try {
+            const res = await fetch(`/api/bk/cases/${c.id}/pdf`);
+            if (!res.ok) throw new Error('Gagal download PDF');
+
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Berita_Acara_${c.student.name.replace(/\s/g, '_')}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error('Download error:', error);
+            alert('Gagal mendownload PDF. Pastikan izin penyimpanan aktif.');
+        }
+    };
+
     const handleLogout = () => {
         localStorage.removeItem('userSession');
         router.push('/');
@@ -147,13 +167,12 @@ export default function BKDashboard() {
                                                 </button>
                                             )}
                                             {c.status === 'RESOLVED' && (
-                                                <a
-                                                    href={`/api/bk/cases/${c.id}/pdf`}
-                                                    target="_blank"
+                                                <button
+                                                    onClick={() => handlePrint(c)}
                                                     className="flex items-center gap-1 bg-gray-100 text-gray-700 px-3 py-1 rounded text-sm hover:bg-gray-200 border border-gray-300"
                                                 >
                                                     <Printer size={14} /> Cetak
-                                                </a>
+                                                </button>
                                             )}
                                         </div>
                                     </td>
