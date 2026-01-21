@@ -70,13 +70,13 @@ export default function AdminDashboard() {
         }
 
         try {
-            const { role, className, id } = JSON.parse(session);
+            const { role, assignedClass, id } = JSON.parse(session);
             setUserRole(role);
             setUserId(id);
 
-            if ((role === 'teacher' || role === 'WALIKELAS') && className) {
-                setUserClass(className);
-                setSelectedClass(className);
+            if ((role === 'teacher' || role === 'WALIKELAS') && assignedClass) {
+                setUserClass(assignedClass);
+                setSelectedClass(assignedClass);
             }
             setMounted(true);
         } catch (e) {

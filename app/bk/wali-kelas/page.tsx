@@ -45,17 +45,17 @@ export default function WaliKelasDashboard() {
         }
 
         try {
-            const { role, className, id } = JSON.parse(session);
-            if ((role !== 'teacher' && role !== 'WALIKELAS') || !className) { // 'teacher' maps to WALIKELAS in login API
-                router.push('/admin/login');
+            const { role, assignedClass, id } = JSON.parse(session);
+            if ((role !== 'teacher' && role !== 'WALIKELAS') || !assignedClass) { // 'teacher' maps to WALIKELAS in login API
+                router.push('/bk/login');
                 return;
             }
-            setUserClass(className);
+            setUserClass(assignedClass);
             setUserId(id);
             setMounted(true);
         } catch (e) {
             localStorage.removeItem('userSession');
-            router.push('/admin/login');
+            router.push('/bk/login');
         }
     }, [router]);
 
