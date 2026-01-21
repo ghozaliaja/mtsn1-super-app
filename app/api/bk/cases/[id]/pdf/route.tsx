@@ -24,7 +24,15 @@ export async function GET(request: Request, props: { params: Promise<{ id: strin
 
         const stream = await renderToStream(<CaseDocument caseData={caseData} />);
 
-        return new NextResponse(stream as any, {
+        // Convert Node stream to Buffer
+        const chunks: Buffer[] = [];
+        // @ts-ignore
+        for await (const chunk of stream) {
+            chunks.push(Buffer.from(chunk));
+        }
+        const pdfBuffer = Buffer.concat(chunks);
+
+        return new NextResponse(pdfBuffer, {
             headers: {
                 'Content-Type': 'application/pdf',
                 'Content-Disposition': `attachment; filename="Berita_Acara_${caseData.student.name.replace(/\s/g, '_')}.pdf"`
