@@ -4,62 +4,65 @@ import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/render
 
 const styles = StyleSheet.create({
     page: {
-        padding: 30,
+        padding: 20,
         fontFamily: 'Helvetica',
+        fontSize: 10,
     },
     header: {
+        marginBottom: 10,
         textAlign: 'center',
-        marginBottom: 20,
-        borderBottom: '2px solid black',
-        paddingBottom: 10,
+        borderBottomWidth: 2,
+        borderBottomColor: '#000',
+        paddingBottom: 5,
     },
     title: {
-        fontSize: 18,
+        fontSize: 14,
         fontWeight: 'bold',
-        marginBottom: 5,
+        marginBottom: 2,
     },
     subtitle: {
-        fontSize: 12,
+        fontSize: 10,
         marginBottom: 2,
     },
     section: {
-        margin: 10,
-        padding: 10,
-    },
-    label: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        marginBottom: 5,
-    },
-    value: {
-        fontSize: 12,
         marginBottom: 10,
     },
     row: {
         flexDirection: 'row',
-        marginBottom: 5,
+        marginBottom: 2,
     },
     colLabel: {
-        width: 150,
-        fontSize: 12,
+        width: 120,
         fontWeight: 'bold',
+        fontSize: 10,
     },
     colValue: {
         flex: 1,
-        fontSize: 12,
+        fontSize: 10,
+    },
+    label: {
+        fontWeight: 'bold',
+        marginBottom: 2,
+        fontSize: 10,
+    },
+    value: {
+        textAlign: 'justify',
+        lineHeight: 1.4,
+        fontSize: 10,
     },
     signatures: {
-        marginTop: 50,
+        marginTop: 20,
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
     signatureBlock: {
+        width: '40%',
         alignItems: 'center',
-        width: 150,
     },
     signatureLine: {
-        marginTop: 50,
-        borderBottom: '1px solid black',
+        marginTop: 40,
+        borderBottomWidth: 1,
+        borderBottomColor: '#000',
         width: '100%',
     },
 });
@@ -80,7 +83,7 @@ export const CaseDocument = ({ caseData }: CaseDocumentProps) => (
 
             {/* Student Info */}
             <View style={styles.section}>
-                <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 10, textDecoration: 'underline' }}>DATA SISWA</Text>
+                <Text style={{ fontSize: 12, fontWeight: 'bold', marginBottom: 5, textDecoration: 'underline' }}>DATA SISWA</Text>
                 <View style={styles.row}>
                     <Text style={styles.colLabel}>Nama Siswa</Text>
                     <Text style={styles.colValue}>: {caseData.student.name}</Text>
@@ -97,7 +100,7 @@ export const CaseDocument = ({ caseData }: CaseDocumentProps) => (
 
             {/* Violation Info */}
             <View style={styles.section}>
-                <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 10, textDecoration: 'underline' }}>DETAIL PELANGGARAN</Text>
+                <Text style={{ fontSize: 12, fontWeight: 'bold', marginBottom: 5, textDecoration: 'underline' }}>DETAIL PELANGGARAN</Text>
                 <View style={styles.row}>
                     <Text style={styles.colLabel}>Jenis Pelanggaran</Text>
                     <Text style={styles.colValue}>: {caseData.violationType}</Text>
@@ -110,7 +113,7 @@ export const CaseDocument = ({ caseData }: CaseDocumentProps) => (
                     <Text style={styles.colLabel}>Pelapor</Text>
                     <Text style={styles.colValue}>: {caseData.reporter.username}</Text>
                 </View>
-                <View style={{ marginTop: 10 }}>
+                <View style={{ marginTop: 5 }}>
                     <Text style={styles.label}>Keterangan / Kronologi:</Text>
                     <Text style={styles.value}>{caseData.description || '-'}</Text>
                 </View>
@@ -118,7 +121,7 @@ export const CaseDocument = ({ caseData }: CaseDocumentProps) => (
 
             {/* Resolution Info */}
             <View style={styles.section}>
-                <Text style={{ fontSize: 14, fontWeight: 'bold', marginBottom: 10, textDecoration: 'underline' }}>PENYELESAIAN</Text>
+                <Text style={{ fontSize: 12, fontWeight: 'bold', marginBottom: 5, textDecoration: 'underline' }}>PENYELESAIAN</Text>
                 <View style={styles.row}>
                     <Text style={styles.colLabel}>Status</Text>
                     <Text style={styles.colValue}>: {caseData.status}</Text>
@@ -127,36 +130,33 @@ export const CaseDocument = ({ caseData }: CaseDocumentProps) => (
                     <Text style={styles.colLabel}>Tanggal Selesai</Text>
                     <Text style={styles.colValue}>: {caseData.resolvedAt ? new Date(caseData.resolvedAt).toLocaleDateString('id-ID') : '-'}</Text>
                 </View>
-                <View style={{ marginTop: 10 }}>
+                <View style={{ marginTop: 5 }}>
                     <Text style={styles.label}>Hasil Konseling / Tindakan:</Text>
                     <Text style={styles.value}>{caseData.resolution || '-'}</Text>
                 </View>
             </View>
 
-            {/* Signatures */}
+            {/* Signatures - Compacted */}
             <View style={styles.signatures}>
                 <View style={styles.signatureBlock}>
                     <Text>Siswa</Text>
                     <View style={styles.signatureLine} />
-                    <Text style={{ marginTop: 5 }}>{caseData.student.name}</Text>
+                    <Text style={{ marginTop: 5, fontSize: 10 }}>{caseData.student.name}</Text>
                 </View>
 
                 <View style={styles.signatureBlock}>
                     <Text>Guru BK</Text>
                     <View style={styles.signatureLine} />
-                    <Text style={{ marginTop: 5 }}>( ........................... )</Text>
+                    <Text style={{ marginTop: 5, fontSize: 10 }}>( ........................... )</Text>
                 </View>
             </View>
 
-            <View style={[styles.signatures, { marginTop: 30 }]}>
-                <View style={styles.signatureBlock}>
-                    <Text>Mengetahui,</Text>
-                    <Text>Orang Tua / Wali</Text>
-                    <View style={styles.signatureLine} />
-                    <Text style={{ marginTop: 5 }}>( ........................... )</Text>
-                </View>
-            </View>
-
+            {/* Parent Signature - Removed as per request to fit one page if needed, but let's try to keep it if space permits. 
+                Actually, user asked to remove it if needed. 
+                I will remove it to be safe and ensure 1 page, as requested "tanda tangan orang tua dihilangkan?".
+                Or I can put it in the middle bottom.
+                Let's remove it for now to guarantee 1 page fit, as the user seemed okay with it.
+            */}
         </Page>
     </Document>
 );
