@@ -35,6 +35,20 @@ async function main() {
         console.log(`Created BK User: ${bk.username}`);
     }
 
+    // Create Main ODOC User (Requested)
+    const mainOdoc = await prisma.user.upsert({
+        where: { username: 'odoc' },
+        update: {
+            password: 'bk', // Force update to requested password
+        },
+        create: {
+            username: 'odoc',
+            password: 'bk',
+            role: Role.BK,
+        },
+    });
+    console.log('Created Main ODOC User:', mainOdoc.username);
+
     // 3. Create Wali Kelas (Simpler IDs: kelas7a, kelas8b, etc.)
     const classes = [
         'VII A', 'VII B', 'VII C', 'VII D', 'VII E', 'VII F', 'VII G', 'VII H', 'VII I',

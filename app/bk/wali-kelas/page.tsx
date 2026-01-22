@@ -308,7 +308,7 @@ export default function WaliKelasDashboard() {
                                 <select
                                     value={violationType}
                                     onChange={(e) => setViolationType(e.target.value)}
-                                    className="w-full p-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500 bg-white"
+                                    className="w-full p-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500 bg-white text-gray-900"
                                 >
                                     <option value="PC">PC - Pacaran</option>
                                     <option value="CB">CB - Cabut / Bolos</option>
@@ -328,7 +328,7 @@ export default function WaliKelasDashboard() {
                                 <textarea
                                     value={violationDesc}
                                     onChange={(e) => setViolationDesc(e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500 h-24 resize-none"
+                                    className="w-full p-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-red-500 h-24 resize-none text-gray-900 placeholder:text-gray-400"
                                     placeholder="Ceritakan kronologi singkat..."
                                 ></textarea>
                             </div>
