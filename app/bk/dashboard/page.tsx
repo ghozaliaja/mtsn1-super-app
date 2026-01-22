@@ -227,21 +227,21 @@ export default function BKDashboard() {
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
-                        <h3 className="text-xl font-bold mb-4">Selesaikan Kasus</h3>
+                        <h3 className="text-xl font-bold mb-4 text-gray-900">Selesaikan Kasus</h3>
                         <div className="mb-4">
-                            <p className="text-sm text-gray-500 mb-1">Siswa</p>
-                            <p className="font-medium">{selectedCase?.student.name} ({selectedCase?.student.class})</p>
+                            <p className="text-sm text-gray-500 mb-1 font-semibold">Siswa</p>
+                            <p className="font-medium text-gray-900">{selectedCase?.student.name} ({selectedCase?.student.class})</p>
                         </div>
                         <div className="mb-4">
-                            <p className="text-sm text-gray-500 mb-1">Masalah</p>
-                            <p className="font-medium">{selectedCase?.violationType} - {selectedCase?.description}</p>
+                            <p className="text-sm text-gray-500 mb-1 font-semibold">Masalah</p>
+                            <p className="font-medium text-gray-900">{selectedCase?.violationType} - {selectedCase?.description}</p>
                         </div>
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-gray-700 mb-2">Catatan Penyelesaian / Hukuman</label>
                             <textarea
                                 value={resolution}
                                 onChange={(e) => setResolution(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg p-3 h-32 focus:ring-2 focus:ring-purple-500 outline-none"
+                                className="w-full border border-gray-300 rounded-lg p-3 h-32 focus:ring-2 focus:ring-purple-500 outline-none text-gray-900 placeholder:text-gray-400"
                                 placeholder="Tulis hasil konseling di sini..."
                             ></textarea>
                         </div>
