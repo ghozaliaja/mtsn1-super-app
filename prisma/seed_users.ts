@@ -35,6 +35,20 @@ async function main() {
         console.log(`Created BK User: ${bk.username}`);
     }
 
+    // Create Librarian User
+    const librarian = await prisma.user.upsert({
+        where: { username: 'pustakawan' },
+        update: {
+            password: 'buku',
+        },
+        create: {
+            username: 'pustakawan',
+            password: 'buku',
+            role: Role.LIBRARY,
+        },
+    });
+    console.log('Created Librarian:', librarian.username);
+
     // Create Main ODOC User (Requested)
     const mainOdoc = await prisma.user.upsert({
         where: { username: 'odoc' },

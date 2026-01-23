@@ -21,12 +21,14 @@ model Student {
 
   attendance Attendance[]
   cases      CounselingCase[]
+  loans      LibraryLoan[]
 }
 
 enum Role {
   ADMIN
   WALIKELAS
   BK
+  LIBRARY
 }
 
 enum CaseStatus {
@@ -93,4 +95,24 @@ model Attendance {
   updatedAt DateTime @updatedAt
 
   @@unique([studentId, date]) // One record per student per day
+}
+
+enum LoanStatus {
+  BORROWED
+  RETURNED
+  OVERDUE
+}
+
+model LibraryLoan {
+  id          Int        @id @default(autoincrement())
+  studentId   Int
+  student     Student    @relation(fields: [studentId], references: [id])
+  bookTitle   String
+  borrowDate  DateTime   @default(now())
+  dueDate     DateTime
+  returnDate  DateTime?
+  status      LoanStatus @default(BORROWED)
+  notes       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }

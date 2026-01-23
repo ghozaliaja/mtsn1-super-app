@@ -32,7 +32,14 @@ export async function GET() {
             create: { username: 'odoc', password: 'bk', role: Role.BK },
         });
 
-        // 4. Create Wali Kelas
+        // 4. Create Librarian User
+        await prisma.user.upsert({
+            where: { username: 'pustakawan' },
+            update: { password: 'buku' },
+            create: { username: 'pustakawan', password: 'buku', role: Role.LIBRARY },
+        });
+
+        // 5. Create Wali Kelas
         const classes = [
             'VII A', 'VII B', 'VII C', 'VII D', 'VII E', 'VII F', 'VII G', 'VII H', 'VII I',
             'VIII A', 'VIII B', 'VIII C', 'VIII D', 'VIII E', 'VIII F', 'VIII G', 'VIII H', 'VIII I',
