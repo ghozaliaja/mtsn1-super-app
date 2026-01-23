@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { BookOpen, LogOut, Search, Plus, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { BookOpen, LogOut, Search, Plus, CheckCircle, Clock, AlertCircle, Camera, X } from 'lucide-react';
+import { Html5Qrcode } from 'html5-qrcode';
 
 interface Student {
     id: number;
@@ -28,8 +29,10 @@ export default function LibraryDashboard() {
     const [notes, setNotes] = useState('');
     const [loans, setLoans] = useState<Loan[]>([]);
     const [loading, setLoading] = useState(false);
+    const [scanning, setScanning] = useState(false);
 
     const scanInputRef = useRef<HTMLInputElement>(null);
+    const scannerRef = useRef<Html5Qrcode | null>(null);
 
     useEffect(() => {
         const session = localStorage.getItem('userSession');
@@ -47,7 +50,52 @@ export default function LibraryDashboard() {
 
         // Focus scan input on load
         setTimeout(() => scanInputRef.current?.focus(), 500);
+
+        return () => {
+            if (scannerRef.current) {
+                scannerRef.current.stop().catch(console.error);
+            }
+        };
     }, []);
+
+    // Scanner Logic
+    useEffect(() => {
+        if (scanning && !scannerRef.current) {
+            const startScanner = async () => {
+                try {
+                    await new Promise(r => setTimeout(r, 100)); // Wait for DOM
+                    const html5QrCode = new Html5Qrcode("reader");
+                    scannerRef.current = html5QrCode;
+
+                    await html5QrCode.start(
+                        { facingMode: "user" }, // Front camera
+                        { fps: 10, qrbox: { width: 250, height: 250 } },
+                        async (decodedText) => {
+                            setScanning(false);
+                            setScanInput(decodedText);
+                            handleSearch(decodedText);
+
+                            // Stop scanner after success
+                            if (scannerRef.current) {
+                                await scannerRef.current.stop();
+                                scannerRef.current = null;
+                            }
+                        },
+                        () => { }
+                    );
+                } catch (err) {
+                    console.error("Error starting scanner", err);
+                    setScanning(false);
+                    alert("Gagal membuka kamera");
+                }
+            };
+            startScanner();
+        } else if (!scanning && scannerRef.current) {
+            scannerRef.current.stop().then(() => {
+                scannerRef.current = null;
+            }).catch(console.error);
+        }
+    }, [scanning]);
 
     const fetchLoans = async () => {
         try {
@@ -61,61 +109,25 @@ export default function LibraryDashboard() {
         }
     };
 
-    const handleScan = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!scanInput) return;
-
+    const handleSearch = async (query: string) => {
+        if (!query) return;
         setLoading(true);
         try {
-            // Find student by ID card (barcode) or NISN
-            // We can reuse the scan API or just search student API
-            // Let's assume scanInput is the barcode/NISN
-            // For now, let's use a direct student search API if available, or just fetch all and filter (inefficient but works for now)
-            // Better: Use /api/scan logic but just to get student info
-
-            // Or simpler: Search by name/class if manual, or barcode if scan
-            // Let's try to fetch student by barcode via a new param in students API or just reuse existing
-
-            // Workaround: Fetch all students for now (or implement search API later)
-            // Actually, let's use the /api/scan endpoint logic but we need a dedicated "get student by barcode" endpoint.
-            // Let's try to use /api/students?query=... if we implemented search there?
-            // Checking /api/students... it usually filters by class.
-
-            // Let's implement a quick lookup here using the existing scan API? 
-            // No, scan API records attendance.
-
-            // Let's just fetch all students and find in client for this MVP (if < 1000 students it's fast enough)
-            // Or better: Add a search endpoint.
-            // Let's try to fetch by ID if scanInput is numeric
-
-            // TEMPORARY: Just use a simple fetch to /api/students/search if it existed.
-            // Let's assume we can search by name for now manually if scan fails?
-
-            // Let's try to find the student by barcode from the full list (cached?)
-            // Or just add `barcode` query to /api/students
-
-            const res = await fetch(`/api/students?barcode=${encodeURIComponent(scanInput)}`);
-            // Note: We need to ensure /api/students supports barcode filtering or we filter client side
-
-            // Let's try client side filter on a full fetch if API doesn't support it yet
-            // But fetching all students is heavy.
-
-            // Let's assume the user types a NAME or scans a BARCODE.
-            // If it's a barcode, it usually matches `student.barcode` or `student.nisn`.
-
-            // Let's try to fetch all students (it's cached usually)
+            // Fetch all students (cached usually) and find match
             const allRes = await fetch('/api/students');
             const allStudents: any[] = await allRes.json();
 
             const found = allStudents.find(s =>
-                s.barcode === scanInput ||
-                s.nisn === scanInput ||
-                s.name.toLowerCase().includes(scanInput.toLowerCase())
+                s.barcode === query ||
+                s.nisn === query ||
+                s.name.toLowerCase().includes(query.toLowerCase())
             );
 
             if (found) {
                 setStudent(found);
-                setScanInput(''); // Clear scan input
+                setScanInput(''); // Clear input
+                // Play sound
+                new Audio('/success.mp3').play().catch(() => { });
             } else {
                 alert('Siswa tidak ditemukan');
             }
@@ -124,6 +136,11 @@ export default function LibraryDashboard() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleScanSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        handleSearch(scanInput);
     };
 
     const handleLoan = async () => {
@@ -190,7 +207,7 @@ export default function LibraryDashboard() {
                             <BookOpen size={24} />
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-gray-800">Perpustakaan</h1>
+                            <h1 className="text-xl font-bold text-gray-900">Perpustakaan</h1>
                             <p className="text-xs text-gray-500">MTsN 1 Labuhan Batu</p>
                         </div>
                     </div>
@@ -205,21 +222,43 @@ export default function LibraryDashboard() {
                 <div className="lg:col-span-1 space-y-6">
                     {/* Scan Box */}
                     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                             <Search size={20} className="text-amber-600" />
                             Cari Siswa
                         </h2>
-                        <form onSubmit={handleScan}>
+
+                        {/* Camera Area */}
+                        {scanning ? (
+                            <div className="mb-4 relative rounded-lg overflow-hidden bg-black">
+                                <div id="reader" className="w-full"></div>
+                                <button
+                                    onClick={() => setScanning(false)}
+                                    className="absolute top-2 right-2 bg-white/20 text-white p-1 rounded-full hover:bg-white/40"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setScanning(true)}
+                                className="w-full mb-4 bg-blue-50 text-blue-600 py-3 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors border border-blue-200"
+                            >
+                                <Camera size={20} />
+                                Buka Kamera (Depan)
+                            </button>
+                        )}
+
+                        <form onSubmit={handleScanSubmit}>
                             <input
                                 ref={scanInputRef}
                                 type="text"
                                 value={scanInput}
                                 onChange={(e) => setScanInput(e.target.value)}
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-lg"
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-lg text-gray-900 placeholder:text-gray-400"
                                 placeholder="Scan Kartu / Ketik Nama..."
                             />
                             <button type="submit" className="w-full mt-3 bg-gray-800 text-white py-2 rounded-lg font-medium hover:bg-gray-900">
-                                Cari
+                                Cari Manual
                             </button>
                         </form>
                     </div>
@@ -230,7 +269,7 @@ export default function LibraryDashboard() {
                             <div className="mb-4 bg-amber-50 p-3 rounded-lg border border-amber-100">
                                 <p className="text-xs text-amber-600 font-bold uppercase tracking-wide">Peminjam</p>
                                 <p className="text-lg font-bold text-gray-900">{student.name}</p>
-                                <p className="text-sm text-gray-600">{student.class}</p>
+                                <p className="text-sm text-gray-700">{student.class}</p>
                             </div>
 
                             <div className="space-y-4">
@@ -240,7 +279,7 @@ export default function LibraryDashboard() {
                                         type="text"
                                         value={bookTitle}
                                         onChange={(e) => setBookTitle(e.target.value)}
-                                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-gray-900 placeholder:text-gray-400 font-medium"
                                         placeholder="Contoh: Buku Paket IPA Kls 8"
                                         autoFocus
                                     />
@@ -251,14 +290,14 @@ export default function LibraryDashboard() {
                                         type="text"
                                         value={notes}
                                         onChange={(e) => setNotes(e.target.value)}
-                                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none"
+                                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-gray-900 placeholder:text-gray-400"
                                         placeholder="Kondisi buku, dll."
                                     />
                                 </div>
                                 <div className="flex gap-2 pt-2">
                                     <button
                                         onClick={() => setStudent(null)}
-                                        className="flex-1 py-2 border border-gray-300 text-gray-600 rounded-lg font-medium hover:bg-gray-50"
+                                        className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
                                     >
                                         Batal
                                     </button>
@@ -279,7 +318,7 @@ export default function LibraryDashboard() {
                 <div className="lg:col-span-2">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                                 <Clock size={20} className="text-blue-600" />
                                 Sedang Dipinjam
                             </h2>
@@ -303,14 +342,14 @@ export default function LibraryDashboard() {
                                         const isOverdue = new Date(loan.dueDate) < new Date();
                                         return (
                                             <tr key={loan.id} className="hover:bg-gray-50 transition-colors">
-                                                <td className="p-4 text-gray-500">
+                                                <td className="p-4 text-gray-700">
                                                     {new Date(loan.borrowDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                                                 </td>
                                                 <td className="p-4">
                                                     <p className="font-medium text-gray-900">{loan.student.name}</p>
-                                                    <p className="text-xs text-gray-500">{loan.student.class}</p>
+                                                    <p className="text-xs text-gray-600">{loan.student.class}</p>
                                                 </td>
-                                                <td className="p-4 font-medium text-gray-800">{loan.bookTitle}</td>
+                                                <td className="p-4 font-medium text-gray-900">{loan.bookTitle}</td>
                                                 <td className="p-4">
                                                     <span className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full w-fit ${isOverdue ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                                                         {isOverdue ? <AlertCircle size={12} /> : <Clock size={12} />}
@@ -330,7 +369,7 @@ export default function LibraryDashboard() {
                                     })}
                                     {loans.length === 0 && (
                                         <tr>
-                                            <td colSpan={5} className="p-12 text-center text-gray-400">
+                                            <td colSpan={5} className="p-12 text-center text-gray-500">
                                                 Tidak ada buku yang sedang dipinjam.
                                             </td>
                                         </tr>

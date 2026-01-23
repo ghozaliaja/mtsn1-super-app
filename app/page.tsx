@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { User, ShieldCheck, HeartHandshake } from 'lucide-react';
+import { User, ShieldCheck, HeartHandshake, BookOpen } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -59,6 +59,20 @@ export default function Home() {
             <p className="text-sm text-gray-500">Lapor & Tangani Masalah Siswa</p>
           </div>
           <div className="absolute right-0 top-0 h-full w-1 bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </Link>
+
+        <Link
+          href="/library/login"
+          className="group relative overflow-hidden bg-white p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-xl transition-all duration-300 flex items-center gap-4"
+        >
+          <div className="bg-amber-100 p-4 rounded-xl group-hover:bg-amber-600 transition-colors duration-300">
+            <BookOpen className="text-amber-600 group-hover:text-white transition-colors duration-300" size={28} />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-xl font-bold text-gray-800">Perpustakaan</h2>
+            <p className="text-sm text-gray-500">Peminjaman Buku & Literasi</p>
+          </div>
+          <div className="absolute right-0 top-0 h-full w-1 bg-amber-600 opacity-0 group-hover:opacity-100 transition-opacity" />
         </Link>
       </div>
 
