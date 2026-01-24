@@ -215,12 +215,25 @@ export default function LibraryDashboard() {
     const handleReturn = async (id: number) => {
         if (!confirm('Tandai buku ini sudah kembali?')) return;
 
+        const loan = loans.find(l => l.id === id);
+        if (!loan) return;
+
         try {
             const res = await fetch(`/api/library/loans/${id}/return`, {
                 method: 'PUT'
             });
 
             if (res.ok) {
+                // Record Visit (Purpose: RETURN)
+                await fetch('/api/library/visits', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentId: loan.student.id,
+                        purpose: 'RETURN'
+                    })
+                });
+
                 fetchLoans();
             } else {
                 alert('Gagal mengembalikan buku');
@@ -252,7 +265,7 @@ export default function LibraryDashboard() {
                 Jam: new Date(v.date).toLocaleTimeString('id-ID'),
                 Nama: v.student.name,
                 Kelas: v.student.class,
-                Keperluan: v.purpose === 'BORROW' ? 'Pinjam Buku' : 'Baca / Kunjungan'
+                Keperluan: v.purpose === 'BORROW' ? 'Pinjam Buku' : (v.purpose === 'RETURN' ? 'Kembalikan Buku' : 'Baca / Kunjungan')
             }));
 
             const ws = XLSX.utils.json_to_sheet(data);
