@@ -9,15 +9,14 @@ export async function GET(request: Request) {
 
     console.log('Fetching students for class:', className);
 
-    if (!className) {
-        return NextResponse.json({ error: 'Class is required' }, { status: 400 });
+    let whereClause = {};
+    if (className) {
+        whereClause = { class: className };
     }
 
     try {
         const students = await prisma.student.findMany({
-            where: {
-                class: className,
-            },
+            where: whereClause,
             orderBy: {
                 name: 'asc',
             },
