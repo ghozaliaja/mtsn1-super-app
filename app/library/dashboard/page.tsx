@@ -4,6 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { BookOpen, LogOut, Search, Plus, CheckCircle, Clock, AlertCircle, Camera, X, FileSpreadsheet } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 interface Student {
     id: number;
@@ -268,17 +271,41 @@ export default function LibraryDashboard() {
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Laporan Kunjungan");
 
-            // Download
-            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Laporan_Kunjungan_Perpus_${month}.xlsx`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
+            // Check if Native Platform
+            if (Capacitor.isNativePlatform()) {
+                try {
+                    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+                    const fileName = `Laporan_Kunjungan_Perpus_${month}.xlsx`;
+
+                    const savedFile = await Filesystem.writeFile({
+                        path: fileName,
+                        data: wbout,
+                        directory: Directory.Documents
+                    });
+
+                    await Share.share({
+                        title: 'Laporan Kunjungan Perpus',
+                        text: `Laporan Kunjungan Perpustakaan Bulan ${month}`,
+                        url: savedFile.uri,
+                        dialogTitle: 'Bagikan Laporan Excel'
+                    });
+                } catch (e) {
+                    console.error('Error saving/sharing file', e);
+                    alert('Gagal menyimpan file di HP. Pastikan izin penyimpanan aktif.');
+                }
+            } else {
+                // Web Download
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Laporan_Kunjungan_Perpus_${month}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            }
 
         } catch (error) {
             console.error(error);
