@@ -22,6 +22,7 @@ model Student {
   attendance Attendance[]
   cases      CounselingCase[]
   loans      LibraryLoan[]
+  visits     LibraryVisit[]
 }
 
 enum Role {
@@ -115,4 +116,13 @@ model LibraryLoan {
   notes       String?
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+}
+
+model LibraryVisit {
+  id        Int      @id @default(autoincrement())
+  studentId Int
+  student   Student  @relation(fields: [studentId], references: [id])
+  date      DateTime @default(now())
+  purpose   String   @default("VISIT") // "VISIT" or "BORROW"
+  createdAt DateTime @default(now())
 }

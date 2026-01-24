@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { BookOpen, LogOut, Search, Plus, CheckCircle, Clock, AlertCircle, Camera, X } from 'lucide-react';
+import { BookOpen, LogOut, Search, Plus, CheckCircle, Clock, AlertCircle, Camera, X, FileSpreadsheet } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 
 interface Student {
@@ -143,11 +143,38 @@ export default function LibraryDashboard() {
         handleSearch(scanInput);
     };
 
+    const handleVisit = async () => {
+        if (!student) return;
+
+        try {
+            const res = await fetch('/api/library/visits', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    studentId: student.id,
+                    purpose: 'VISIT'
+                })
+            });
+
+            if (res.ok) {
+                alert('Kunjungan berhasil dicatat!');
+                setStudent(null);
+                setScanInput('');
+                scanInputRef.current?.focus();
+            } else {
+                alert('Gagal mencatat kunjungan');
+            }
+        } catch (error) {
+            alert('Terjadi kesalahan');
+        }
+    };
+
     const handleLoan = async () => {
         if (!student || !bookTitle) return;
 
         try {
-            const res = await fetch('/api/library/loans', {
+            // 1. Record Loan
+            const resLoan = await fetch('/api/library/loans', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -157,7 +184,17 @@ export default function LibraryDashboard() {
                 })
             });
 
-            if (res.ok) {
+            // 2. Record Visit (Purpose: BORROW)
+            await fetch('/api/library/visits', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    studentId: student.id,
+                    purpose: 'BORROW'
+                })
+            });
+
+            if (resLoan.ok) {
                 alert('Peminjaman berhasil dicatat!');
                 setStudent(null);
                 setBookTitle('');
@@ -190,6 +227,65 @@ export default function LibraryDashboard() {
         }
     };
 
+    const handleExportVisits = async () => {
+        const month = prompt('Masukkan bulan (YYYY-MM):', new Date().toISOString().slice(0, 7));
+        if (!month) return;
+
+        try {
+            const res = await fetch(`/api/library/visits?month=${month}`);
+            const visits = await res.json();
+
+            if (!visits || visits.length === 0) {
+                alert('Tidak ada data kunjungan pada bulan ini.');
+                return;
+            }
+
+            // Dynamically import libraries
+            const XLSX = (await import('xlsx-js-style')).default || (await import('xlsx-js-style'));
+
+            const data = visits.map((v: any, index: number) => ({
+                No: index + 1,
+                Tanggal: new Date(v.date).toLocaleDateString('id-ID'),
+                Jam: new Date(v.date).toLocaleTimeString('id-ID'),
+                Nama: v.student.name,
+                Kelas: v.student.class,
+                Keperluan: v.purpose === 'BORROW' ? 'Pinjam Buku' : 'Baca / Kunjungan'
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+
+            // Auto width
+            const wscols = [
+                { wch: 5 },
+                { wch: 15 },
+                { wch: 10 },
+                { wch: 30 },
+                { wch: 10 },
+                { wch: 20 }
+            ];
+            ws['!cols'] = wscols;
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Laporan Kunjungan");
+
+            // Download
+            const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Laporan_Kunjungan_Perpus_${month}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+        } catch (error) {
+            console.error(error);
+            alert('Gagal export laporan');
+        }
+    };
+
     const handleLogout = () => {
         localStorage.removeItem('userSession');
         router.push('/library/login');
@@ -211,9 +307,14 @@ export default function LibraryDashboard() {
                             <p className="text-xs text-gray-500">MTsN 1 Labuhan Batu</p>
                         </div>
                     </div>
-                    <button onClick={handleLogout} className="text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-                        <LogOut size={16} /> Keluar
-                    </button>
+                    <div className="flex gap-2">
+                        <button onClick={handleExportVisits} className="text-green-600 hover:bg-green-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                            <FileSpreadsheet size={16} /> Laporan
+                        </button>
+                        <button onClick={handleLogout} className="text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                            <LogOut size={16} /> Keluar
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -267,12 +368,26 @@ export default function LibraryDashboard() {
                     {student && (
                         <div className="bg-white p-6 rounded-xl shadow-sm border border-amber-200 ring-1 ring-amber-100 animate-in slide-in-from-top-4">
                             <div className="mb-4 bg-amber-50 p-3 rounded-lg border border-amber-100">
-                                <p className="text-xs text-amber-600 font-bold uppercase tracking-wide">Peminjam</p>
+                                <p className="text-xs text-amber-600 font-bold uppercase tracking-wide">Pengunjung</p>
                                 <p className="text-lg font-bold text-gray-900">{student.name}</p>
                                 <p className="text-sm text-gray-700">{student.class}</p>
                             </div>
 
                             <div className="space-y-4">
+                                <button
+                                    onClick={handleVisit}
+                                    className="w-full py-3 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 shadow-md flex items-center justify-center gap-2"
+                                >
+                                    <CheckCircle size={20} />
+                                    Catat Kunjungan (Baca)
+                                </button>
+
+                                <div className="relative flex py-2 items-center">
+                                    <div className="flex-grow border-t border-gray-300"></div>
+                                    <span className="flex-shrink-0 mx-4 text-gray-400 text-xs">ATAU PINJAM BUKU</span>
+                                    <div className="flex-grow border-t border-gray-300"></div>
+                                </div>
+
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Judul Buku</label>
                                     <input
@@ -281,7 +396,6 @@ export default function LibraryDashboard() {
                                         onChange={(e) => setBookTitle(e.target.value)}
                                         className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 outline-none text-gray-900 placeholder:text-gray-400 font-medium"
                                         placeholder="Contoh: Buku Paket IPA Kls 8"
-                                        autoFocus
                                     />
                                 </div>
                                 <div>
