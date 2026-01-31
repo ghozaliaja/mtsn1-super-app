@@ -380,7 +380,7 @@ export default function AdminDashboard() {
 
             // Determine start row for data (A1 is 0)
             const origin = titleInfo.length > 0 ? `A${titleInfo.length + 1}` : 'A1';
-            const ws = XLSX.utils.json_to_sheet(data, { origin });
+            const ws = XLSX.utils.json_to_sheet(data, { origin } as any);
 
             // Add Titles if any
             if (titleInfo.length > 0) {
@@ -517,6 +517,30 @@ export default function AdminDashboard() {
         }
     };
 
+    const [isResetting, setIsResetting] = useState(false);
+
+    const handleReset = async () => {
+        if (!confirm('PERINGATAN: Apakah Anda yakin ingin menghapus SEMUA data absensi HARI INI? Tindakan ini tidak dapat dibatalkan.')) return;
+
+        setIsResetting(true);
+        try {
+            const res = await fetch('/api/attendance/reset', { method: 'POST' });
+            const data = await res.json();
+
+            if (res.ok) {
+                alert(`Berhasil! ${data.count} data absensi hari ini telah dihapus.`);
+                window.location.reload(); // Reload to refresh data
+            } else {
+                alert('Gagal mereset data: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Reset error:', error);
+            alert('Terjadi kesalahan sistem saat reset data.');
+        } finally {
+            setIsResetting(false);
+        }
+    };
+
     const handleLogout = () => {
         localStorage.removeItem('userSession');
         router.push('/');
@@ -542,6 +566,9 @@ export default function AdminDashboard() {
                             <button onClick={() => router.push('/scan')} className="flex items-center gap-2 bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-sm text-sm"><QrCode size={16} /> Scan</button>
                             <button onClick={() => router.push('/admin/id-cards')} className="flex items-center gap-2 bg-orange-600 text-white px-3 py-2 rounded-lg hover:bg-orange-700 transition-colors font-medium shadow-sm text-sm"><IdCard size={16} /> ID Cards</button>
                             <button onClick={() => router.push('/admin/students')} className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors font-medium shadow-sm text-sm"><Users size={16} /> Siswa</button>
+                            <button onClick={handleReset} disabled={isResetting} className="flex items-center gap-2 bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors font-medium shadow-sm text-sm">
+                                {isResetting ? <Loader2 size={16} className="animate-spin" /> : <LogOut size={16} className="rotate-180" />} Reset Hari Ini
+                            </button>
                         </>
                     )}
                     <button onClick={handleLogout} className="flex items-center gap-2 bg-red-100 text-red-600 px-3 py-2 rounded-lg hover:bg-red-200 transition-colors font-medium text-sm"><LogOut size={16} /> Logout</button>
