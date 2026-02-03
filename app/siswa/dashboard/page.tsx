@@ -5,7 +5,7 @@ import { usePrayerTimes } from '../../hooks/usePrayerTimes';
 import PrayerItem from '../../components/PrayerItem';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
-import { Loader2, Calendar, MapPin, LogOut } from 'lucide-react';
+import { Loader2, Calendar, MapPin, LogOut, Download, X } from 'lucide-react';
 
 export default function StudentDashboard() {
     const router = useRouter();
@@ -13,6 +13,14 @@ export default function StudentDashboard() {
     const [statuses, setStatuses] = useState<Record<string, boolean>>({});
     const [currentTime, setCurrentTime] = useState<string>('');
     const [student, setStudent] = useState<{ id: number; name: string; class: string } | null>(null);
+
+    // Export State
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const [exportPeriod, setExportPeriod] = useState<'daily' | 'monthly'>('daily');
+    const [viewMode, setViewMode] = useState<'prayer' | 'school'>('prayer');
+    const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+    const [selectedMonth, setSelectedMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
 
     useEffect(() => {
         const storedStudent = localStorage.getItem('studentData');
@@ -100,6 +108,183 @@ export default function StudentDashboard() {
         }
     };
 
+    const handleExport = async () => {
+        if (!student) return;
+        setIsExporting(true);
+        try {
+            // Dynamically import libraries
+            const XLSX = (await import('xlsx-js-style')).default || (await import('xlsx-js-style'));
+            const { Capacitor } = await import('@capacitor/core');
+            const { Filesystem, Directory } = await import('@capacitor/filesystem');
+            const { Share } = await import('@capacitor/share');
+
+            const wb = XLSX.utils.book_new();
+            let data: any[] = [];
+            let fileName = '';
+            let sheetName = '';
+            let titleInfo: any[][] = [];
+
+            if (exportPeriod === 'daily') {
+                fileName = `Laporan_${viewMode === 'school' ? 'Absensi' : 'Ibadah'}_Harian_${student.name.replace(/\s+/g, '_')}_${selectedDate}.xlsx`;
+                sheetName = 'Laporan Harian';
+
+                titleInfo = [
+                    [`Laporan ${viewMode === 'school' ? 'Kehadiran' : 'Ibadah'} Harian Siswa MTsN 1 Labuhanbatu`],
+                    [`Nama : ${student.name}`],
+                    [`Kelas : ${student.class}`],
+                    ['']
+                ];
+
+                // Fetch daily data specific to selected date
+                const res = await fetch(`/api/attendance?studentId=${student.id}&date=${selectedDate}`);
+                const record = await res.json(); // returns object with status fields
+
+                if (viewMode === 'school') {
+                    data = [{
+                        Tanggal: selectedDate,
+                        'Jam Masuk': record.timeIn ? format(new Date(record.timeIn), 'HH:mm') : '-',
+                        'Status': record.status || 'Belum Hadir'
+                    }];
+                } else {
+                    data = [{
+                        Tanggal: selectedDate,
+                        Subuh: record.subuh ? 'Hadir' : 'Tidak',
+                        Dhuha: record.dhuha ? 'Hadir' : 'Tidak',
+                        Dzuhur: record.dzuhur ? 'Hadir' : 'Tidak',
+                        Ashar: record.ashar ? 'Hadir' : 'Tidak',
+                        Maghrib: record.maghrib ? 'Hadir' : 'Tidak',
+                        Isya: record.isya ? 'Hadir' : 'Tidak',
+                        Tahajjud: record.tahajjud ? 'Hadir' : 'Tidak',
+                        Tarawih: record.tarawih ? 'Hadir' : 'Tidak',
+                        Puasa: record.puasa ? 'Ya' : 'Tidak',
+                        Quran: record.alquran ? 'Ya' : 'Tidak',
+                    }];
+                }
+
+            } else {
+                // MONTHLY
+                fileName = `Laporan_${viewMode === 'school' ? 'Absensi' : 'Ibadah'}_Bulanan_${student.name.replace(/\s+/g, '_')}_${selectedMonth}.xlsx`;
+                sheetName = 'Laporan Bulanan';
+
+                const [year, month] = selectedMonth.split('-');
+                const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                const formattedMonth = `${monthNames[parseInt(month) - 1]} ${year}`;
+
+                titleInfo = [
+                    [`Laporan ${viewMode === 'school' ? 'Kehadiran' : 'Ibadah'} Bulanan Siswa MTsN 1 Labuhanbatu`],
+                    [`Nama : ${student.name}`],
+                    [`Kelas : ${student.class}`],
+                    [`Bulan : ${formattedMonth}`],
+                    ['']
+                ];
+
+                const res = await fetch(`/api/attendance?studentId=${student.id}&month=${selectedMonth}`);
+                const records = await res.json(); // returns array of records
+                const daysInMonth = new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate();
+
+                for (let i = 1; i <= daysInMonth; i++) {
+                    const dayDate = `${selectedMonth}-${String(i).padStart(2, '0')}`;
+                    const record = records.find((r: any) => r.date === dayDate) || {};
+
+                    if (viewMode === 'school') {
+                        data.push({
+                            Tanggal: String(i).padStart(2, '0'),
+                            'Jam Masuk': record.timeIn ? format(new Date(record.timeIn), 'HH:mm') : '-',
+                            'Status': record.status || '-'
+                        });
+                    } else {
+                        data.push({
+                            Tgl: String(i).padStart(2, '0'),
+                            Sbh: record.subuh ? 'v' : '',
+                            Dha: record.dhuha ? 'v' : '',
+                            Dzhr: record.dzuhur ? 'v' : '',
+                            Ashr: record.ashar ? 'v' : '',
+                            Magh: record.maghrib ? 'v' : '',
+                            Isya: record.isya ? 'v' : '',
+                            Tahaj: record.tahajjud ? 'v' : '',
+                            Tarw: record.tarawih ? 'v' : '',
+                            Psa: record.puasa ? 'v' : '',
+                            Qrn: record.alquran ? 'v' : '',
+                            Ket: ''
+                        });
+                    }
+                }
+            }
+
+            const origin = titleInfo.length > 0 ? `A${titleInfo.length + 1}` : 'A1';
+            const ws = XLSX.utils.json_to_sheet(data, { origin } as any);
+            if (titleInfo.length > 0) {
+                XLSX.utils.sheet_add_aoa(ws, titleInfo, { origin: 'A1' });
+                // Simple Header Styling
+                ['A1', 'A2', 'A3', 'A4'].forEach(cell => { if (ws[cell]) ws[cell].s = { font: { bold: true } }; });
+            }
+
+            // Column Widths
+            if (viewMode === 'school') {
+                ws['!cols'] = [{ wch: 15 }, { wch: 15 }, { wch: 15 }];
+            } else {
+                ws['!cols'] = Array(12).fill({ wch: 5 });
+            }
+
+            // Add simple borders
+            const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+            const dataStartRow = titleInfo.length > 0 ? titleInfo.length : 0;
+            for (let R = dataStartRow; R <= range.e.r; ++R) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (ws[cell_address]) {
+                        ws[cell_address].s = {
+                            border: {
+                                top: { style: "thin" }, bottom: { style: "thin" },
+                                left: { style: "thin" }, right: { style: "thin" }
+                            },
+                            alignment: { horizontal: "center" }
+                        };
+                        if (R === dataStartRow) ws[cell_address].s.font = { bold: true };
+                    }
+                }
+            }
+
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+            if (Capacitor.isNativePlatform()) {
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
+                await Filesystem.writeFile({
+                    path: fileName,
+                    data: wbout,
+                    directory: Directory.Cache
+                });
+                const savedFile = await Filesystem.getUri({ path: fileName, directory: Directory.Cache });
+                await Share.share({
+                    title: 'Download Report',
+                    text: `Laporan ${fileName}`,
+                    url: savedFile.uri,
+                    dialogTitle: 'Bagikan Laporan'
+                });
+            } else {
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                }, 100);
+            }
+
+            setIsExportModalOpen(false);
+        } catch (e) {
+            console.error('Export Error:', e);
+            alert('Gagal download laporan. Silakan coba lagi.');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     const handleLogout = () => {
         localStorage.removeItem('studentData');
         router.push('/');
@@ -168,6 +353,102 @@ export default function StudentDashboard() {
                     </p>
                 </div>
             </header>
+
+            {/* Download Button Section */}
+            <div className="px-4 mt-4 mb-2 flex justify-end">
+                <button
+                    onClick={() => setIsExportModalOpen(true)}
+                    className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-green-700 transition-colors shadow-sm"
+                >
+                    <Download size={16} />
+                    Download Laporan
+                </button>
+            </div>
+
+            {/* Export Modal */}
+            {isExportModalOpen && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-lg font-bold text-gray-800">Download Laporan</h3>
+                            <button onClick={() => setIsExportModalOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Mode Selection */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Laporan</label>
+                                <div className="flex bg-gray-100 p-1 rounded-lg">
+                                    <button
+                                        onClick={() => setViewMode('prayer')}
+                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'prayer' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'}`}
+                                    >
+                                        Ibadah
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('school')}
+                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${viewMode === 'school' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500'}`}
+                                    >
+                                        Sekolah
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Period Selection */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Periode</label>
+                                <div className="flex bg-gray-100 p-1 rounded-lg">
+                                    <button
+                                        onClick={() => setExportPeriod('daily')}
+                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${exportPeriod === 'daily' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500'}`}
+                                    >
+                                        Harian
+                                    </button>
+                                    <button
+                                        onClick={() => setExportPeriod('monthly')}
+                                        className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-all ${exportPeriod === 'monthly' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500'}`}
+                                    >
+                                        Bulanan
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Date Picker */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    {exportPeriod === 'daily' ? 'Pilih Tanggal' : 'Pilih Bulan'}
+                                </label>
+                                {exportPeriod === 'daily' ? (
+                                    <input
+                                        type="date"
+                                        value={selectedDate}
+                                        onChange={(e) => setSelectedDate(e.target.value)}
+                                        className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                                    />
+                                ) : (
+                                    <input
+                                        type="month"
+                                        value={selectedMonth}
+                                        onChange={(e) => setSelectedMonth(e.target.value)}
+                                        className="w-full p-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+                                    />
+                                )}
+                            </div>
+
+                            <button
+                                onClick={handleExport}
+                                disabled={isExporting}
+                                className="w-full bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-md flex items-center justify-center gap-2 mt-2"
+                            >
+                                {isExporting ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />}
+                                {isExporting ? 'Generating...' : 'Download Excel'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Prayer List */}
             <div className="p-4 -mt-2">

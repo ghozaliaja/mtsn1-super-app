@@ -87,7 +87,7 @@ async function startPolling() {
                     timeZone: 'Asia/Jakarta' // Force WIB
                 });
 
-                const message = `Assalamualaikum Wr. Wb.,\n\nDiberitahukan bahwa anak Bapak/Ibu:\nNama: *${name}*\nKelas: *${className}*\nStatus: *${status}*\nWaktu: *${time} WIB*\n\nTerima kasih.\n_MTsN 1 Labuhanbatu_`;
+                const message = `Assalamualaikum Wr. Wb.,\n\nDiberitahukan bahwa anak Bapak/Ibu:\nNama: *${name}*\nKelas: *${className}*\nStatus: *${status}*\n\nTerima kasih.\n_MTsN 1 Labuhanbatu_`;
 
                 if (SAFE_MODE) {
                     console.log(`[SIMULASI] Would send to: ${phone}`);
