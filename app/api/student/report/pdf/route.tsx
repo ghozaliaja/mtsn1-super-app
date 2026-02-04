@@ -5,7 +5,10 @@ import { renderToStream } from '@react-pdf/renderer';
 import { StudentReportDocument } from '@/components/pdf/StudentReportDocument';
 import React from 'react';
 
+const { Buffer } = require('node:buffer');
+
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // Increase timeout
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
@@ -84,12 +87,15 @@ export async function GET(request: Request) {
         }
 
         const stream = await renderToStream(
-            <StudentReportDocument 
-                student={ student } 
-                data = { data } 
-                period = { period } 
-                type = { type } 
-                dateTitle = { dateTitle }
+            <StudentReportDocument
+                student={{
+                    ...student,
+                    nisn: student.nisn || undefined
+                }}
+                data={data}
+                period={period}
+                type={type}
+                dateTitle={dateTitle}
             />
         );
 
@@ -111,6 +117,9 @@ export async function GET(request: Request) {
 
     } catch (error) {
         console.error('PDF Generation Error:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return NextResponse.json({
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+        }, { status: 500 });
     }
 }

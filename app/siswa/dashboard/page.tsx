@@ -122,7 +122,10 @@ export default function StudentDashboard() {
 
             // Fetch PDF Blob
             const response = await fetch(apiUrl);
-            if (!response.ok) throw new Error('Failed to generate PDF');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Unknown Error' }));
+                throw new Error(errorData.error || `Server Error: ${response.status}`);
+            } // Check OK
 
             const blob = await response.blob();
             const fileName = `Laporan_${viewMode}_${exportPeriod}_${student.name.replace(/\s+/g, '_')}_${exportPeriod === 'daily' ? selectedDate : selectedMonth}.pdf`;
@@ -169,9 +172,9 @@ export default function StudentDashboard() {
                 setIsExportModalOpen(false);
             }
 
-        } catch (e) {
+        } catch (e: any) {
             console.error('Export Error:', e);
-            alert('Gagal download laporan PDF. Silakan coba lagi.');
+            alert(`Gagal download laporan: ${e.message || 'Error tidak diketahui'}`);
         } finally {
             setIsExporting(false);
         }
