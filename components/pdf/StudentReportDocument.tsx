@@ -6,10 +6,10 @@ const styles = StyleSheet.create({
     page: {
         padding: 20,
         fontFamily: 'Helvetica',
-        fontSize: 9,
+        fontSize: 10, // Increased to 10
     },
     header: {
-        marginBottom: 10, // Create space for title
+        marginBottom: 10,
         textAlign: 'center',
         borderBottomWidth: 1.5,
         borderBottomColor: '#000',
@@ -33,16 +33,16 @@ const styles = StyleSheet.create({
         marginBottom: 2,
     },
     infoLabel: {
-        width: 80,
+        width: 100, // Increased width for label
         fontWeight: 'bold',
-        fontSize: 9, // Consistent small font
+        fontSize: 10, // Increased to 10
     },
     infoValue: {
         flex: 1,
-        fontSize: 9,
+        fontSize: 10, // Increased to 10
     },
     table: {
-        width: 'auto',
+        width: '100%', // FORCE FULL WIDTH
         borderStyle: 'solid',
         borderWidth: 1,
         borderRightWidth: 0,
@@ -50,9 +50,8 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     tableRow: {
-        margin: 'auto',
         flexDirection: 'row',
-        height: 18, // Fixed row height to control vertical space
+        height: 20, // Increased height for larger font
         alignItems: 'center',
     },
     tableCol: {
@@ -64,12 +63,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     tableHeader: {
-        backgroundColor: '#e0e0e0', // Slightly darker header
+        backgroundColor: '#e0e0e0',
         fontWeight: 'bold',
     },
     tableCell: {
         textAlign: 'center',
-        fontSize: 8, // Smaller font for table
+        fontSize: 10, // Increased to 10
         padding: 0,
     },
     signatureSection: {
@@ -83,7 +82,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     signatureLine: {
-        marginTop: 35, // Space for signature
+        marginTop: 35,
         borderBottomWidth: 1,
         borderBottomColor: '#000',
         width: '100%',
@@ -137,8 +136,8 @@ export const StudentReportDocument = ({ student, data, period, type, dateTitle }
                 <View style={styles.table}>
                     {/* Table Header */}
                     <View style={[styles.tableRow, styles.tableHeader]}>
-                        <View style={{ ...styles.tableCol, width: period === 'monthly' ? 25 : 80 }}>
-                            <Text style={styles.tableCell}>{period === 'monthly' ? 'Tgl' : 'Tanggal'}</Text>
+                        <View style={{ ...styles.tableCol, width: period === 'monthly' ? 30 : 80 }}>
+                            <Text style={styles.tableCell}>{row.dateLabel}</Text>
                         </View>
                         {type === 'prayer' ? (
                             <>
