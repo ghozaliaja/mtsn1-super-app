@@ -612,6 +612,13 @@ export default function AdminDashboard() {
                                 <button onClick={() => setViewMode('school')} className={`flex-1 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${viewMode === 'school' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Sekolah</button>
                             </div>
                         </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Periode</label>
+                            <div className="flex bg-gray-100 p-1 rounded-lg">
+                                <button onClick={() => setExportPeriod('daily')} className={`flex-1 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${exportPeriod === 'daily' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Harian</button>
+                                <button onClick={() => setExportPeriod('monthly')} className={`flex-1 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${exportPeriod === 'monthly' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Bulanan</button>
+                            </div>
+                        </div>
                     </div>
                     <button onClick={handleExport} disabled={isExporting} className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 ${isExporting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'}`}>
                         {isExporting ? <><Loader2 size={20} className="animate-spin" /> Generating Excel...</> : <><Download size={20} /> Download Excel</>}

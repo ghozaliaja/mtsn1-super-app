@@ -6,38 +6,40 @@ const styles = StyleSheet.create({
     page: {
         padding: 20,
         fontFamily: 'Helvetica',
-        fontSize: 10,
+        fontSize: 9,
     },
     header: {
-        marginBottom: 20,
+        marginBottom: 10, // Create space for title
         textAlign: 'center',
-        borderBottomWidth: 2,
+        borderBottomWidth: 1.5,
         borderBottomColor: '#000',
-        paddingBottom: 10,
+        paddingBottom: 5,
     },
     title: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
-        marginBottom: 5,
+        marginBottom: 3,
         textTransform: 'uppercase',
     },
     subtitle: {
-        fontSize: 12,
-        marginBottom: 2,
+        fontSize: 10,
+        marginBottom: 1,
     },
     infoSection: {
-        marginBottom: 20,
+        marginBottom: 10,
     },
     infoRow: {
         flexDirection: 'row',
-        marginBottom: 5,
+        marginBottom: 2,
     },
     infoLabel: {
-        width: 100,
+        width: 80,
         fontWeight: 'bold',
+        fontSize: 9, // Consistent small font
     },
     infoValue: {
         flex: 1,
+        fontSize: 9,
     },
     table: {
         width: 'auto',
@@ -45,39 +47,43 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRightWidth: 0,
         borderBottomWidth: 0,
-        marginBottom: 20,
+        marginBottom: 10,
     },
     tableRow: {
         margin: 'auto',
         flexDirection: 'row',
+        height: 18, // Fixed row height to control vertical space
+        alignItems: 'center',
     },
     tableCol: {
         borderStyle: 'solid',
         borderWidth: 1,
         borderLeftWidth: 0,
         borderTopWidth: 0,
-        padding: 5,
+        height: '100%',
+        justifyContent: 'center',
     },
     tableHeader: {
-        backgroundColor: '#f0f0f0',
+        backgroundColor: '#e0e0e0', // Slightly darker header
         fontWeight: 'bold',
     },
     tableCell: {
         textAlign: 'center',
-        fontSize: 9,
+        fontSize: 8, // Smaller font for table
+        padding: 0,
     },
     signatureSection: {
-        marginTop: 30,
+        marginTop: 15,
         flexDirection: 'row',
         justifyContent: 'flex-end',
-        paddingRight: 50,
+        paddingRight: 40,
     },
     signatureBlock: {
-        width: 200,
+        width: 150,
         alignItems: 'center',
     },
     signatureLine: {
-        marginTop: 50,
+        marginTop: 35, // Space for signature
         borderBottomWidth: 1,
         borderBottomColor: '#000',
         width: '100%',
@@ -98,8 +104,8 @@ interface StudentReportDocumentProps {
 
 export const StudentReportDocument = ({ student, data, period, type, dateTitle }: StudentReportDocumentProps) => {
 
-    // Determine orientation based on columns needed
-    const orientation = (type === 'prayer' && period === 'monthly') ? 'landscape' : 'portrait';
+    // Always use portrait as requested
+    const orientation = 'portrait';
 
     return (
         <Document>
@@ -108,7 +114,7 @@ export const StudentReportDocument = ({ student, data, period, type, dateTitle }
                 <View style={styles.header}>
                     <Text style={styles.title}>Laporan {type === 'prayer' ? 'Mutabaah Ibadah' : 'Absensi Sekolah'}</Text>
                     <Text style={styles.subtitle}>MTsN 1 LABUHANBATU</Text>
-                    <Text style={{ fontSize: 10, marginTop: 4 }}>Jl. Ki Hajar Dewantara No. 123</Text>
+                    <Text style={{ fontSize: 8, marginTop: 2, color: '#444' }}>Jl. Ki Hajar Dewantara No. 123</Text>
                 </View>
 
                 {/* Student Info */}
@@ -131,27 +137,27 @@ export const StudentReportDocument = ({ student, data, period, type, dateTitle }
                 <View style={styles.table}>
                     {/* Table Header */}
                     <View style={[styles.tableRow, styles.tableHeader]}>
-                        <View style={{ ...styles.tableCol, width: period === 'monthly' ? 30 : 100 }}>
+                        <View style={{ ...styles.tableCol, width: period === 'monthly' ? 25 : 80 }}>
                             <Text style={styles.tableCell}>{period === 'monthly' ? 'Tgl' : 'Tanggal'}</Text>
                         </View>
                         {type === 'prayer' ? (
                             <>
-                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Subuh</Text></View>
-                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Dhuha</Text></View>
-                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Dzuhur</Text></View>
-                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Ashar</Text></View>
-                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Maghrib</Text></View>
-                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Isya</Text></View>
-                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Tahajjud</Text></View>
-                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Tarawih</Text></View>
-                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Puasa</Text></View>
-                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Quran</Text></View>
+                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Sbh</Text></View>
+                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Dha</Text></View>
+                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Dzh</Text></View>
+                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Ash</Text></View>
+                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Mag</Text></View>
+                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Isy</Text></View>
+                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Tah</Text></View>
+                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Tar</Text></View>
+                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Psa</Text></View>
+                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Qrn</Text></View>
                             </>
                         ) : (
                             <>
-                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Jam Masuk</Text></View>
+                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Masuk</Text></View>
                                 <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Status</Text></View>
-                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Jam Pulang</Text></View>
+                                <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Pulang</Text></View>
                                 <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>Status</Text></View>
                             </>
                         )}
@@ -160,7 +166,7 @@ export const StudentReportDocument = ({ student, data, period, type, dateTitle }
                     {/* Table Body */}
                     {data.map((row, index) => (
                         <View key={index} style={styles.tableRow}>
-                            <View style={{ ...styles.tableCol, width: period === 'monthly' ? 30 : 100 }}>
+                            <View style={{ ...styles.tableCol, width: period === 'monthly' ? 25 : 80 }}>
                                 <Text style={styles.tableCell}>{row.dateLabel}</Text>
                             </View>
                             {type === 'prayer' ? (
@@ -178,9 +184,9 @@ export const StudentReportDocument = ({ student, data, period, type, dateTitle }
                                 </>
                             ) : (
                                 <>
-                                    <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>{row.timeIn || '-'}</Text></View>
+                                    <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>{row.timeIn ? row.timeIn.substring(0, 5) : '-'}</Text></View>
                                     <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>{row.status || '-'}</Text></View>
-                                    <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>{row.timeOut || '-'}</Text></View>
+                                    <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>{row.timeOut ? row.timeOut.substring(0, 5) : '-'}</Text></View>
                                     <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>{row.statusOut || '-'}</Text></View>
                                 </>
                             )}
@@ -194,7 +200,7 @@ export const StudentReportDocument = ({ student, data, period, type, dateTitle }
                         <Text style={{ marginBottom: 5 }}>Mengetahui,</Text>
                         <Text>Wali Murid</Text>
                         <View style={styles.signatureLine} />
-                        <Text style={{ marginTop: 5, fontSize: 10 }}>( ........................................ )</Text>
+                        <Text style={{ marginTop: 5, fontSize: 8, color: '#888' }}>( Tanda Tangan )</Text>
                     </View>
                 </View>
             </Page>
