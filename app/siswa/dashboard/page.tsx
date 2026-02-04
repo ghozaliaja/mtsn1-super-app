@@ -112,158 +112,50 @@ export default function StudentDashboard() {
         if (!student) return;
         setIsExporting(true);
         try {
-            // Dynamically import libraries
-            const XLSX = (await import('xlsx-js-style')).default || (await import('xlsx-js-style'));
+            // Capacitor Imports
             const { Capacitor } = await import('@capacitor/core');
             const { Filesystem, Directory } = await import('@capacitor/filesystem');
             const { Share } = await import('@capacitor/share');
 
-            const wb = XLSX.utils.book_new();
-            let data: any[] = [];
-            let fileName = '';
-            let sheetName = '';
-            let titleInfo: any[][] = [];
+            // Construct API URL
+            const apiUrl = `/api/student/report/pdf?studentId=${student.id}&type=${viewMode}&period=${exportPeriod}&date=${exportPeriod === 'daily' ? selectedDate : selectedMonth}`;
 
-            if (exportPeriod === 'daily') {
-                fileName = `Laporan_${viewMode === 'school' ? 'Absensi' : 'Ibadah'}_Harian_${student.name.replace(/\s+/g, '_')}_${selectedDate}.xlsx`;
-                sheetName = 'Laporan Harian';
+            // Fetch PDF Blob
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Failed to generate PDF');
 
-                titleInfo = [
-                    [`Laporan ${viewMode === 'school' ? 'Kehadiran' : 'Ibadah'} Harian Siswa MTsN 1 Labuhanbatu`],
-                    [`Nama : ${student.name}`],
-                    [`Kelas : ${student.class}`],
-                    ['']
-                ];
-
-                // Fetch daily data specific to selected date
-                const res = await fetch(`/api/attendance?studentId=${student.id}&date=${selectedDate}`);
-                const record = await res.json(); // returns object with status fields
-
-                if (viewMode === 'school') {
-                    data = [{
-                        Tanggal: selectedDate,
-                        'Jam Masuk': record.timeIn ? format(new Date(record.timeIn), 'HH:mm') : '-',
-                        'Status': record.status || 'Belum Hadir'
-                    }];
-                } else {
-                    data = [{
-                        Tanggal: selectedDate,
-                        Subuh: record.subuh ? 'Hadir' : 'Tidak',
-                        Dhuha: record.dhuha ? 'Hadir' : 'Tidak',
-                        Dzuhur: record.dzuhur ? 'Hadir' : 'Tidak',
-                        Ashar: record.ashar ? 'Hadir' : 'Tidak',
-                        Maghrib: record.maghrib ? 'Hadir' : 'Tidak',
-                        Isya: record.isya ? 'Hadir' : 'Tidak',
-                        Tahajjud: record.tahajjud ? 'Hadir' : 'Tidak',
-                        Tarawih: record.tarawih ? 'Hadir' : 'Tidak',
-                        Puasa: record.puasa ? 'Ya' : 'Tidak',
-                        Quran: record.alquran ? 'Ya' : 'Tidak',
-                    }];
-                }
-
-            } else {
-                // MONTHLY
-                fileName = `Laporan_${viewMode === 'school' ? 'Absensi' : 'Ibadah'}_Bulanan_${student.name.replace(/\s+/g, '_')}_${selectedMonth}.xlsx`;
-                sheetName = 'Laporan Bulanan';
-
-                const [year, month] = selectedMonth.split('-');
-                const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-                const formattedMonth = `${monthNames[parseInt(month) - 1]} ${year}`;
-
-                titleInfo = [
-                    [`Laporan ${viewMode === 'school' ? 'Kehadiran' : 'Ibadah'} Bulanan Siswa MTsN 1 Labuhanbatu`],
-                    [`Nama : ${student.name}`],
-                    [`Kelas : ${student.class}`],
-                    [`Bulan : ${formattedMonth}`],
-                    ['']
-                ];
-
-                const res = await fetch(`/api/attendance?studentId=${student.id}&month=${selectedMonth}`);
-                const records = await res.json(); // returns array of records
-                const daysInMonth = new Date(parseInt(selectedMonth.split('-')[0]), parseInt(selectedMonth.split('-')[1]), 0).getDate();
-
-                for (let i = 1; i <= daysInMonth; i++) {
-                    const dayDate = `${selectedMonth}-${String(i).padStart(2, '0')}`;
-                    const record = records.find((r: any) => r.date === dayDate) || {};
-
-                    if (viewMode === 'school') {
-                        data.push({
-                            Tanggal: String(i).padStart(2, '0'),
-                            'Jam Masuk': record.timeIn ? format(new Date(record.timeIn), 'HH:mm') : '-',
-                            'Status': record.status || '-'
-                        });
-                    } else {
-                        data.push({
-                            Tgl: String(i).padStart(2, '0'),
-                            Sbh: record.subuh ? 'v' : '',
-                            Dha: record.dhuha ? 'v' : '',
-                            Dzhr: record.dzuhur ? 'v' : '',
-                            Ashr: record.ashar ? 'v' : '',
-                            Magh: record.maghrib ? 'v' : '',
-                            Isya: record.isya ? 'v' : '',
-                            Tahaj: record.tahajjud ? 'v' : '',
-                            Tarw: record.tarawih ? 'v' : '',
-                            Psa: record.puasa ? 'v' : '',
-                            Qrn: record.alquran ? 'v' : '',
-                            Ket: ''
-                        });
-                    }
-                }
-            }
-
-            const origin = titleInfo.length > 0 ? `A${titleInfo.length + 1}` : 'A1';
-            const ws = XLSX.utils.json_to_sheet(data, { origin } as any);
-            if (titleInfo.length > 0) {
-                XLSX.utils.sheet_add_aoa(ws, titleInfo, { origin: 'A1' });
-                // Simple Header Styling
-                ['A1', 'A2', 'A3', 'A4'].forEach(cell => { if (ws[cell]) ws[cell].s = { font: { bold: true } }; });
-            }
-
-            // Column Widths
-            if (viewMode === 'school') {
-                ws['!cols'] = [{ wch: 15 }, { wch: 15 }, { wch: 15 }];
-            } else {
-                ws['!cols'] = Array(12).fill({ wch: 5 });
-            }
-
-            // Add simple borders
-            const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
-            const dataStartRow = titleInfo.length > 0 ? titleInfo.length : 0;
-            for (let R = dataStartRow; R <= range.e.r; ++R) {
-                for (let C = range.s.c; C <= range.e.c; ++C) {
-                    const cell_address = XLSX.utils.encode_cell({ r: R, c: C });
-                    if (ws[cell_address]) {
-                        ws[cell_address].s = {
-                            border: {
-                                top: { style: "thin" }, bottom: { style: "thin" },
-                                left: { style: "thin" }, right: { style: "thin" }
-                            },
-                            alignment: { horizontal: "center" }
-                        };
-                        if (R === dataStartRow) ws[cell_address].s.font = { bold: true };
-                    }
-                }
-            }
-
-            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            const blob = await response.blob();
+            const fileName = `Laporan_${viewMode}_${exportPeriod}_${student.name.replace(/\s+/g, '_')}_${exportPeriod === 'daily' ? selectedDate : selectedMonth}.pdf`;
 
             if (Capacitor.isNativePlatform()) {
-                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'base64' });
-                await Filesystem.writeFile({
-                    path: fileName,
-                    data: wbout,
-                    directory: Directory.Cache
-                });
-                const savedFile = await Filesystem.getUri({ path: fileName, directory: Directory.Cache });
-                await Share.share({
-                    title: 'Download Report',
-                    text: `Laporan ${fileName}`,
-                    url: savedFile.uri,
-                    dialogTitle: 'Bagikan Laporan'
-                });
+                // Convert Blob to Base64
+                const reader = new FileReader();
+                reader.readAsDataURL(blob);
+                reader.onloadend = async () => {
+                    const base64data = reader.result as string;
+                    const base64Content = base64data.split(',')[1];
+
+                    try {
+                        const savedFile = await Filesystem.writeFile({
+                            path: fileName,
+                            data: base64Content,
+                            directory: Directory.Cache
+                        });
+
+                        await Share.share({
+                            title: 'Download Report',
+                            text: `Laporan ${fileName}`,
+                            url: savedFile.uri,
+                            dialogTitle: 'Bagikan Laporan PDF'
+                        });
+                        setIsExportModalOpen(false);
+                    } catch (e) {
+                        console.error('File Write/Share Error', e);
+                        alert('Gagal menyimpan file ke HP.');
+                    }
+                };
             } else {
-                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-                const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                // Web Download
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -274,12 +166,12 @@ export default function StudentDashboard() {
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
                 }, 100);
+                setIsExportModalOpen(false);
             }
 
-            setIsExportModalOpen(false);
         } catch (e) {
             console.error('Export Error:', e);
-            alert('Gagal download laporan. Silakan coba lagi.');
+            alert('Gagal download laporan PDF. Silakan coba lagi.');
         } finally {
             setIsExporting(false);
         }

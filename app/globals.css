@@ -24,3 +24,10 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Force black text for inputs to fix visibility issues */
+input,
+textarea,
+select {
+  color: #000000 !important;
+}
