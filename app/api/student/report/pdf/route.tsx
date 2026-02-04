@@ -56,8 +56,11 @@ export async function GET(request: Request) {
                     dateLabel: String(i),
                     ...{
                         subuh: false, dhuha: false, dzuhur: false, ashar: false, maghrib: false, isya: false, tahajjud: false, tarawih: false, puasa: false, alquran: false,
-                        timeIn: null, status: null, timeOut: null, statusOut: null,
-                        ...record // overwrite defaults if record exists
+                        status: null, statusOut: null,
+                        ...record, // overwrite defaults if record exists
+                        // Format times explicitly to strings
+                        timeIn: record?.timeIn ? new Date(record.timeIn).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).replace('.', ':') : null,
+                        timeOut: record?.timeOut ? new Date(record.timeOut).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).replace('.', ':') : null,
                     }
                 });
             }
@@ -80,8 +83,11 @@ export async function GET(request: Request) {
                 dateLabel: date,
                 ...{
                     subuh: false, dhuha: false, dzuhur: false, ashar: false, maghrib: false, isya: false, tahajjud: false, tarawih: false, puasa: false, alquran: false,
-                    timeIn: null, status: null, timeOut: null, statusOut: null,
-                    ...record // overwrite defaults if record exists
+                    status: null, statusOut: null,
+                    ...record, // overwrite defaults if record exists
+                    // Format times explicitly to strings
+                    timeIn: record?.timeIn ? new Date(record.timeIn).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).replace('.', ':') : null,
+                    timeOut: record?.timeOut ? new Date(record.timeOut).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }).replace('.', ':') : null,
                 }
             });
         }

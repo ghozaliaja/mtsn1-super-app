@@ -137,7 +137,7 @@ export const StudentReportDocument = ({ student, data, period, type, dateTitle }
                     {/* Table Header */}
                     <View style={[styles.tableRow, styles.tableHeader]}>
                         <View style={{ ...styles.tableCol, width: period === 'monthly' ? 30 : 80 }}>
-                            <Text style={styles.tableCell}>{row.dateLabel}</Text>
+                            <Text style={styles.tableCell}>{period === 'monthly' ? 'Tgl' : 'Tanggal'}</Text>
                         </View>
                         {type === 'prayer' ? (
                             <>
@@ -183,9 +183,9 @@ export const StudentReportDocument = ({ student, data, period, type, dateTitle }
                                 </>
                             ) : (
                                 <>
-                                    <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>{row.timeIn ? row.timeIn.substring(0, 5) : '-'}</Text></View>
+                                    <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>{row.timeIn || '-'}</Text></View>
                                     <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>{row.status || '-'}</Text></View>
-                                    <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>{row.timeOut ? row.timeOut.substring(0, 5) : '-'}</Text></View>
+                                    <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>{row.timeOut || '-'}</Text></View>
                                     <View style={{ ...styles.tableCol, flex: 1 }}><Text style={styles.tableCell}>{row.statusOut || '-'}</Text></View>
                                 </>
                             )}
