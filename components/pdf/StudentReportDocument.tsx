@@ -9,7 +9,7 @@ const styles = StyleSheet.create({
         fontSize: 10, // Increased to 10
     },
     header: {
-        marginBottom: 10,
+        marginBottom: 5, // Reduced from 10
         textAlign: 'center',
         borderBottomWidth: 1.5,
         borderBottomColor: '#000',
@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 14,
         fontWeight: 'bold',
-        marginBottom: 3,
+        marginBottom: 2,
         textTransform: 'uppercase',
     },
     subtitle: {
@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
         marginBottom: 1,
     },
     infoSection: {
-        marginBottom: 10,
+        marginBottom: 5, // Reduced from 10
     },
     infoRow: {
         flexDirection: 'row',
@@ -47,11 +47,11 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRightWidth: 0,
         borderBottomWidth: 0,
-        marginBottom: 10,
+        marginBottom: 5, // Reduced from 10
     },
     tableRow: {
         flexDirection: 'row',
-        height: 20, // Increased height for larger font
+        height: 17, // Reduced from 20 to fit single page (31 * 17 = 527pt)
         alignItems: 'center',
     },
     tableCol: {
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
         padding: 0,
     },
     signatureSection: {
-        marginTop: 15,
+        marginTop: 10, // Reduced from 15
         flexDirection: 'row',
         justifyContent: 'flex-end',
         paddingRight: 40,
@@ -113,7 +113,7 @@ export const StudentReportDocument = ({ student, data, period, type, dateTitle }
                 <View style={styles.header}>
                     <Text style={styles.title}>Laporan {type === 'prayer' ? 'Mutabaah Ibadah' : 'Absensi Sekolah'}</Text>
                     <Text style={styles.subtitle}>MTsN 1 LABUHANBATU</Text>
-                    <Text style={{ fontSize: 8, marginTop: 2, color: '#444' }}>Jl. Ki Hajar Dewantara No. 123</Text>
+                    <Text style={{ fontSize: 8, marginTop: 2, color: '#444' }}>Jl. Kampung Baru Gg. Tsanawiyah No 150</Text>
                 </View>
 
                 {/* Student Info */}
