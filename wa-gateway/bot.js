@@ -36,6 +36,8 @@ client.on('auth_failure', msg => {
 
 client.on('ready', () => {
     console.log('Bot WhatsApp Siap! Menunggu data absensi...');
+    console.log('✅ FITUR ANTI-SPAM AKTIF: Hanya mengirim data 30 menit terakhir.');
+    console.log('⏰ JAM OPERASIONAL: 07:00 - 09:00 WIB. (Hanya Kedatangan Pagi).');
     startPolling();
 });
 
@@ -51,6 +53,19 @@ async function startPolling() {
 
     // Polling setiap 30 detik (Hemat Database)
     setInterval(async () => {
+        // 1. Cek Jam Operasional (HANYA 07:00 - 09:00 WIB)
+        // Gunakan Intl agar fix WIB tidak peduli setting jam laptop
+        const now = new Date();
+        const wibTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Jakarta" }));
+        const currentHour = wibTime.getHours();
+
+        // Strict: Hanya jam 7 sampai jam 9 kurang (07:00 - 08:59)
+        if (currentHour < 7 || currentHour >= 9) {
+            // Diluar jam kerja, skip
+            if (isProcessing) isProcessing = false;
+            return;
+        }
+
         if (isProcessing) return;
         isProcessing = true;
 
@@ -62,7 +77,7 @@ async function startPolling() {
                 JOIN "Student" s ON a."studentId" = s.id
                 WHERE a."waStatus" = 'PENDING'
                 AND s."parentPhone" IS NOT NULL
-                AND a."createdAt" >= CURRENT_DATE
+                AND a."createdAt" > NOW() - INTERVAL '30 minutes'
                 LIMIT 5
             `);
 
@@ -84,7 +99,8 @@ async function startPolling() {
                 const time = new Date(timeIn).toLocaleTimeString('id-ID', {
                     hour: '2-digit',
                     minute: '2-digit',
-                    timeZone: 'Asia/Jakarta' // Force WIB
+                    timeZone: 'Asia/Jakarta', // Force WIB
+                    hour12: false
                 });
 
                 const message = `Assalamualaikum Wr. Wb.,\n\nDiberitahukan bahwa anak Bapak/Ibu:\nNama: *${name}*\nKelas: *${className}*\nStatus: *${status}*\n\nTerima kasih.\n_MTsN 1 Labuhanbatu_`;
