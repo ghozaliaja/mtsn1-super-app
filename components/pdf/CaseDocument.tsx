@@ -78,7 +78,7 @@ export const CaseDocument = ({ caseData }: CaseDocumentProps) => (
             <View style={styles.header}>
                 <Text style={styles.title}>BERITA ACARA BIMBINGAN KONSELING</Text>
                 <Text style={styles.subtitle}>MTsN 1 LABUHANBATU</Text>
-                <Text style={styles.subtitle}>Jl. Ki Hajar Dewantara No. 123</Text>
+                <Text style={styles.subtitle}>Jl. Kampung Baru Gg. Tsanawiyah No 150</Text>
             </View>
 
             {/* Student Info */}
