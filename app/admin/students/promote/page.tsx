@@ -3,42 +3,24 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { CLASSES } from '@/lib/constants';
 
 export default function PromoteStudentsPage() {
     const router = useRouter();
     const [classes, setClasses] = useState<string[]>([]);
     const [sourceClass, setSourceClass] = useState('');
     const [targetClass, setTargetClass] = useState('');
+    const [isManualSource, setIsManualSource] = useState(false);
+    const [isManualTarget, setIsManualTarget] = useState(false);
     const [students, setStudents] = useState<any[]>([]);
     const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isPromoting, setIsPromoting] = useState(false);
 
-    // Fetch available classes on mount
+    // Set baseline classes list
     useEffect(() => {
-        fetch('/api/classes')
-            .then(res => res.json())
-            .then(data => {
-                // Assuming API returns { classes: [...] } or array
-                // If not available, we might need to hardcode or create an endpoint
-                // For now, let's hardcode common classes if API fails or returns empty
-                const classList = data.classes || [
-                    'VII A', 'VII B', 'VII C', 'VII D', 'VII E', 'VII F', 'VII G', 'VII H', 'VII I',
-                    'VIII A', 'VIII B', 'VIII C', 'VIII D', 'VIII E', 'VIII F', 'VIII G', 'VIII H', 'VIII I',
-                    'IX A', 'IX B', 'IX C', 'IX D', 'IX E', 'IX F', 'IX G', 'IX H', 'IX I', 'IX K',
-                    'ALUMNI'
-                ];
-                setClasses(classList);
-            })
-            .catch(() => {
-                // Fallback
-                setClasses([
-                    'VII A', 'VII B', 'VII C', 'VII D', 'VII E', 'VII F', 'VII G', 'VII H', 'VII I',
-                    'VIII A', 'VIII B', 'VIII C', 'VIII D', 'VIII E', 'VIII F', 'VIII G', 'VIII H', 'VIII I',
-                    'IX A', 'IX B', 'IX C', 'IX D', 'IX E', 'IX F', 'IX G', 'IX H', 'IX I', 'IX K',
-                    'ALUMNI'
-                ]);
-            });
+        const classList = [...CLASSES.filter(c => c !== 'TEST'), 'ALUMNI'];
+        setClasses(classList);
     }, []);
 
     // Fetch students when source class changes
@@ -116,27 +98,71 @@ export default function PromoteStudentsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-white p-6 rounded-lg shadow">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Dari Kelas (Asal)</label>
-                    <select
-                        value={sourceClass}
-                        onChange={(e) => setSourceClass(e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                    >
-                        <option value="">Pilih Kelas</option>
-                        {classes.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    <div className="flex justify-between items-center mb-2">
+                        <label className="block text-sm font-medium text-gray-700">Dari Kelas (Asal)</label>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setIsManualSource(!isManualSource);
+                                setSourceClass('');
+                            }}
+                            className="text-xs text-blue-600 hover:underline"
+                        >
+                            {isManualSource ? 'Pilih dari daftar' : 'Ketik manual'}
+                        </button>
+                    </div>
+                    {isManualSource ? (
+                        <input
+                            type="text"
+                            placeholder="Contoh: VII J"
+                            value={sourceClass}
+                            onChange={(e) => setSourceClass(e.target.value.toUpperCase())}
+                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border"
+                        />
+                    ) : (
+                        <select
+                            value={sourceClass}
+                            onChange={(e) => setSourceClass(e.target.value)}
+                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border"
+                        >
+                            <option value="">Pilih Kelas</option>
+                            {classes.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    )}
                 </div>
 
                 <div className="bg-white p-6 rounded-lg shadow">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Ke Kelas (Tujuan)</label>
-                    <select
-                        value={targetClass}
-                        onChange={(e) => setTargetClass(e.target.value)}
-                        className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
-                    >
-                        <option value="">Pilih Kelas</option>
-                        {classes.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    <div className="flex justify-between items-center mb-2">
+                        <label className="block text-sm font-medium text-gray-700">Ke Kelas (Tujuan)</label>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setIsManualTarget(!isManualTarget);
+                                setTargetClass('');
+                            }}
+                            className="text-xs text-green-600 hover:underline"
+                        >
+                            {isManualTarget ? 'Pilih dari daftar' : 'Ketik manual'}
+                        </button>
+                    </div>
+                    {isManualTarget ? (
+                        <input
+                            type="text"
+                            placeholder="Contoh: VIII J, ALUMNI, dll"
+                            value={targetClass}
+                            onChange={(e) => setTargetClass(e.target.value.toUpperCase())}
+                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 p-2 border"
+                        />
+                    ) : (
+                        <select
+                            value={targetClass}
+                            onChange={(e) => setTargetClass(e.target.value)}
+                            className="block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 p-2 border"
+                        >
+                            <option value="">Pilih Kelas</option>
+                            {classes.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                    )}
                 </div>
             </div>
 
