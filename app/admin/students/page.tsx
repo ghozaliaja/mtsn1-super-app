@@ -47,7 +47,17 @@ export default async function StudentManagementPage() {
                         </p>
                     </div>
                 </Link>
+
+                <Link href="/admin/students/alumni" className="block md:col-span-2">
+                    <div className="bg-amber-50 border border-amber-200 p-6 rounded-lg hover:bg-amber-100 transition shadow-sm">
+                        <h2 className="text-xl font-semibold text-amber-800 mb-2">🏅 Daftar Alumni</h2>
+                        <p className="text-amber-600">
+                            Lihat seluruh data siswa yang telah lulus, lengkap dengan NISN dan tahun kelulusan. Filter per angkatan.
+                        </p>
+                    </div>
+                </Link>
             </div>
+
 
             <div className="bg-white p-6 rounded-lg shadow">
                 <h2 className="text-lg font-semibold mb-4">Statistik Siswa ({totalStudents} Total)</h2>

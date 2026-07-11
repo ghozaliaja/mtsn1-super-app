@@ -15,14 +15,18 @@ export async function POST(request: Request) {
             );
         }
 
+        // Auto-fill graduationYear if promoting to ALUMNI
+        const updateData: any = { class: targetClass };
+        if (targetClass === 'ALUMNI') {
+            updateData.graduationYear = new Date().getFullYear();
+        }
+
         // Update students
         const result = await prisma.student.updateMany({
             where: {
                 id: { in: studentIds },
             },
-            data: {
-                class: targetClass,
-            },
+            data: updateData,
         });
 
         return NextResponse.json({

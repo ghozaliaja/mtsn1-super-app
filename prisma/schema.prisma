@@ -8,16 +8,19 @@ datasource db {
 }
 
 model Student {
-  id         Int          @id @default(autoincrement())
-  name       String
-  class      String
-  nisn       String?      @unique
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  id             Int          @id @default(autoincrement())
+  name           String
+  class          String
+  nisn           String?      @unique
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   
   // New fields for QR Attendance
-  barcode     String?      @unique
-  parentPhone String?
+  barcode        String?      @unique
+  parentPhone    String?
+
+  // Alumni tracking
+  graduationYear Int?
 
   attendance Attendance[]
   cases      CounselingCase[]
