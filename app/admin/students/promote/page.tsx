@@ -58,8 +58,9 @@ export default function PromoteStudentsPage() {
         fetch(`/api/students?class=${encodeURIComponent(sourceClass)}`)
             .then(res => res.json())
             .then(data => {
-                setStudents(data.students || []);
-                setSelectedStudents((data.students || []).map((s: any) => s.id)); // Select all by default
+                const studentList = Array.isArray(data) ? data : (data.students || []);
+                setStudents(studentList);
+                setSelectedStudents(studentList.map((s: any) => s.id)); // Select all by default
             })
             .catch(err => console.error(err))
             .finally(() => setIsLoading(false));
