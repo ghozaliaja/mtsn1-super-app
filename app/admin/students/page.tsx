@@ -1,21 +1,30 @@
 import Link from 'next/link';
 import { PrismaClient } from '@prisma/client';
 import { ArrowLeft } from 'lucide-react';
+import { CLASSES } from '@/lib/constants';
 
 const prisma = new PrismaClient();
 
 export default async function StudentManagementPage() {
-    // Get stats
-    const totalStudents = await prisma.student.count();
+    // Only count active (non-alumni) students
+    const totalStudents = await prisma.student.count({
+        where: { class: { not: 'ALUMNI' } }
+    });
+
     const classStats = await prisma.student.groupBy({
         by: ['class'],
-        _count: {
-            id: true,
-        },
-        orderBy: {
-            class: 'asc',
-        },
+        _count: { id: true },
     });
+
+    // Build a map from the DB result
+    const countMap = new Map<string, number>();
+    classStats.forEach(stat => countMap.set(stat.class, stat._count.id));
+
+    // Merge with all predefined classes so empty ones still show up
+    const allClassStats = CLASSES.map(cls => ({
+        class: cls,
+        count: countMap.get(cls) ?? 0,
+    }));
 
     return (
         <div className="p-6">
@@ -58,15 +67,26 @@ export default async function StudentManagementPage() {
                 </Link>
             </div>
 
-
             <div className="bg-white p-6 rounded-lg shadow">
-                <h2 className="text-lg font-semibold mb-4">Statistik Siswa ({totalStudents} Total)</h2>
+                <h2 className="text-lg font-semibold mb-4">Statistik Siswa Aktif ({totalStudents} Total)</h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    {classStats.map((stat) => (
-                        <div key={stat.class} className="bg-gray-50 p-4 rounded border text-center">
-                            <div className="text-sm text-gray-500 font-medium">{stat.class}</div>
-                            <div className="text-2xl font-bold text-gray-800">{stat._count.id}</div>
-                            <div className="text-xs text-gray-400">Siswa</div>
+                    {allClassStats.map((stat) => (
+                        <div
+                            key={stat.class}
+                            className={`p-4 rounded border text-center ${stat.count === 0
+                                ? 'bg-red-50 border-red-200'
+                                : 'bg-gray-50 border-gray-200'
+                            }`}
+                        >
+                            <div className={`text-sm font-medium ${stat.count === 0 ? 'text-red-400' : 'text-gray-500'}`}>
+                                {stat.class}
+                            </div>
+                            <div className={`text-2xl font-bold ${stat.count === 0 ? 'text-red-300' : 'text-gray-800'}`}>
+                                {stat.count}
+                            </div>
+                            <div className={`text-xs ${stat.count === 0 ? 'text-red-300' : 'text-gray-400'}`}>
+                                {stat.count === 0 ? 'Kosong' : 'Siswa'}
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -74,3 +94,4 @@ export default async function StudentManagementPage() {
         </div>
     );
 }
+
