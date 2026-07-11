@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { PrismaClient } from '@prisma/client';
+import { ArrowLeft } from 'lucide-react';
 
 const prisma = new PrismaClient();
 
@@ -18,7 +19,15 @@ export default async function StudentManagementPage() {
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-bold mb-6">Manajemen Siswa</h1>
+            <div className="flex items-center gap-4 mb-6">
+                <Link
+                    href="/admin/dashboard"
+                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-900 flex items-center justify-center"
+                >
+                    <ArrowLeft size={20} />
+                </Link>
+                <h1 className="text-2xl font-bold">Manajemen Siswa</h1>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <Link href="/admin/students/import" className="block">

@@ -2,8 +2,11 @@
 
 import { useState } from 'react';
 import * as XLSX from 'xlsx';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 
 export default function ImportStudentsPage() {
+    const router = useRouter();
     const [file, setFile] = useState<File | null>(null);
     const [previewData, setPreviewData] = useState<any[]>([]);
     const [isUploading, setIsUploading] = useState(false);
@@ -90,7 +93,15 @@ export default function ImportStudentsPage() {
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-bold mb-6">Import Data Siswa</h1>
+            <div className="flex items-center gap-4 mb-6">
+                <button
+                    onClick={() => router.push('/admin/students')}
+                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-900"
+                >
+                    <ArrowLeft size={20} />
+                </button>
+                <h1 className="text-2xl font-bold">Import Data Siswa</h1>
+            </div>
 
             <div className="bg-white p-6 rounded-lg shadow mb-6">
                 <div className="flex justify-between items-center mb-4">

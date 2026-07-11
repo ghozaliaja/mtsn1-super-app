@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 
 export default function PromoteStudentsPage() {
+    const router = useRouter();
     const [classes, setClasses] = useState<string[]>([]);
     const [sourceClass, setSourceClass] = useState('');
     const [targetClass, setTargetClass] = useState('');
@@ -101,7 +104,15 @@ export default function PromoteStudentsPage() {
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-bold mb-6">Kenaikan Kelas (Promote)</h1>
+            <div className="flex items-center gap-4 mb-6">
+                <button
+                    onClick={() => router.push('/admin/students')}
+                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-gray-600 hover:text-gray-900"
+                >
+                    <ArrowLeft size={20} />
+                </button>
+                <h1 className="text-2xl font-bold">Kenaikan Kelas (Promote)</h1>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div className="bg-white p-6 rounded-lg shadow">
