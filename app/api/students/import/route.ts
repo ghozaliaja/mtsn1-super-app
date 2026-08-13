@@ -57,13 +57,15 @@ export async function POST(request: Request) {
                         },
                     });
                 } else {
-                    // Create new student
+                    // Create new student with auto-generated barcode
+                    const barcode = `MT-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
                     await prisma.student.create({
                         data: {
                             name: student.name,
                             class: student.class,
                             nisn: student.nisn ? String(student.nisn) : null,
                             parentPhone: student.parentPhone ? String(student.parentPhone) : null,
+                            barcode,
                         },
                     });
                 }
